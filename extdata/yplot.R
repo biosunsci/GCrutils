@@ -1,32 +1,40 @@
-yget_subset_maf = function(laml=NULL,maf_=NULL,gl_=NULL,export=F,include_total=F,retmode='maf.list',...){
-    # retmode in ['maf']
-    if (retmode=='maf.list'){
-        laml = yload_laml_maf(maf_,gl_,laml)
-        glx = laml %>% getClinicalData
-        sub_mafs = list()
-        grps = glx$Clin_classification %>% unique()
-        
-        if (length(grps)==1){
-            warning('Only 1 subgroup detected, set include_total <- FALSE')
-            include_total = FALSE
-        }
-        if (include_total==TRUE){
-            # all together    
-            sub_mafs[[length(sub_mafs)+1]] = laml
-            names(sub_mafs)[[sub_mafs %>% length]] = 'ALL'
-        }
-        # sub groups
-        for (g in grps){
-            submaf = subsetMaf(laml,clinQuery = paste0("Clin_classification == '",g,"'"))   
-            sub_mafs[[length(sub_mafs)+1]] = submaf
-            names(sub_mafs)[[sub_mafs %>% length]] = g
-        }    
-        return(sub_mafs)
+#' Title
+#'
+#' @param x
+#' @param func
+#'
+#' @return
+#' @export
+#'
+#' @examples
+yloop = function(x,func){
+    l = length(formals(func))
+    if (l==3) for (i in 1:length(x)){
+        func(x[[i]],names(x[i]),i)
+    }else if (l==2)  for (i in 1:length(x)){
+        func(x[[i]],names(x[i]))
+    }else if (l==1)  for (i in 1:length(x)){
+        func(x[[i]])
     }
-    
 }
 
 
+
+
+
+
+#' Title
+#'
+#' @param maf_
+#' @param gl_
+#' @param laml
+#' @param only_12_cols
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
     if (is.null(laml) && !is.null(maf_) && !is.null(gl_)) {
         maf_ = yload_dfx(maf_,...)
@@ -38,10 +46,10 @@ yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
     }else stop('laml,maf_,gl_ all NULL')
     laml
 }
-#-----------------
+
 
 # for repel labeling
-# load showtext if you want to plot Chinese charactors 
+# load showtext if you want to plot Chinese charactors
 # library(showtext)
 # showtext_auto()
 
@@ -58,7 +66,7 @@ yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
 #                       ,max.overlaps=Inf
 #                       ,alpha =0.6
 #                       ,...){
-#     # 
+#     #
 #     if (!is.null(cnt_file_) && !(is.null(glx_))){
 #         r = ynormalize_count_bydeseq2(cnt_file_,glx_,frm=frm,diff=F)
 #         normd = r$normd
@@ -74,37 +82,52 @@ yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
 #     if (ncol(mat) < ncol(sig_table)) ylog('containing ',sum(!mask),' features with sd==0, removed')
 #     pca <- prcomp(mat, center = TRUE, scale. = TRUE)
 #     data = cbind(pca$x[colData%>%rownames,1:2],
-#                colData) %>% 
-#         rownames_to_column("Tumor_Sample_Barcode") 
+#                colData) %>%
+#         rownames_to_column("Tumor_Sample_Barcode")
 
 #     # mutate(a=(rowname %>% str_sub(1,6))) %>%
-#     gg =  data %>% 
+#     gg =  data %>%
 #         ggplot(aes(PC1,PC2,color=Clin_classification,label=Tumor_Sample_Barcode)) +
 #         geom_point()
 #     if (add_label==TRUE){
 #         gg = gg + geom_label_repel(size={{tag_fontsize}},alpha=alpha,max.overlaps=max.overlaps)
-#     }        
-#     argv = yget_args(.f = ydumpto) %>% ypush(list(x=gg,...),.expand = T) 
+#     }
+#     argv = yget_args(.f = ydumpto) %>% ypush(list(x=gg,...),.expand = T)
 #     # argv =  environment() %>% as.list() %>% ygetlast(formals(ydumpto) %>% names) %>% ypush(list(x=gg))
 #     ydumpto %>% do.call(args=argv)
 #     print(argv %>% names)
 #     list(gg=gg,pca=pca,data=data,argv=argv)
 # }
 
-yplot_pca = function(normd,colData,color_col = 'Group',add_label=FALSE,tag_fontsize = 6, 
+#' Title
+#'
+#' @param normd
+#' @param colData
+#' @param color_col
+#' @param add_label
+#' @param tag_fontsize
+#' @param max.overlaps
+#' @param alpha
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+yplot_pca = function(normd,colData,color_col = 'Group',add_label=FALSE,tag_fontsize = 6,
     max.overlaps = Inf, alpha = 0.6,...){
     sig_table = normd %>% t
     mask = (sig_table %>% apply(sd, MARGIN = 2)) > 0
     mat = sig_table[, mask]
-    if (ncol(mat) < ncol(sig_table)) 
+    if (ncol(mat) < ncol(sig_table))
         ylog("containing ", sum(!mask), " features with sd==0, removed")
     pca <- prcomp(mat, center = TRUE, scale. = TRUE)
     color_col = sym(color_col)
-    data = cbind(pca$x[colData %>% rownames, 1:2], colData) %>% 
+    data = cbind(pca$x[colData %>% rownames, 1:2], colData) %>%
         rownames_to_column("Tumor_Sample_Barcode")
-    gg = data %>% ggplot(aes(PC1, PC2, color = !!color_col, 
-        label = Tumor_Sample_Barcode)) + 
-        geom_point(size=3,alpha=0.7) + 
+    gg = data %>% ggplot(aes(PC1, PC2, color = !!color_col,
+        label = Tumor_Sample_Barcode)) +
+        geom_point(size=3,alpha=0.7) +
         ggtitle('PCA')
     if (add_label == TRUE) {
         library(ggrepel)
@@ -112,95 +135,102 @@ yplot_pca = function(normd,colData,color_col = 'Group',add_label=FALSE,tag_fonts
     }
     list(gg = gg, pca = pca, data = data)
 }
-#-----------------
-
-ygenerate_annotation_colors = function(annotation,
-                                       annotation_colors=NA,
-                                       palette="npg",
-                                       show_all_ggsci_palette=FALSE){
-    ggsci_palette = c(npg=10,aaas=10,nejm=8,
-                          lancet=9,jama=7,jco=10,
-                          ucscgb=26,d=310,locuszoom=7,
-                          igv=50,uchicago=9,startrek=7,
-                          tron=7,futurama=12,rickandmorty=12,
-                          simpsons=16,gsea=12,material=10)
-    if (show_all_ggsci_palette==TRUE){
-        print('ALL available ggsci_palette:')
-        return(ggsci_palette)
-    }
-    if (!is.na(annotation_colors) && !is.null(annotation_colors)){
-        already_set = names(annotation_colors)
-    }
-    else already_set = c()
-    if (palette %in% names(ggsci_palette)){
-        fun = do.call(what = `::`
-                      ,args = list("ggsci",str_flatten(c('pal_',palette))))
-        pal = fun()(ggsci_palette[palette])
-    }
-    # stat total subgroups
-    n = 0
-    grps = list()
-    for (colname in colnames(annotation)){
-        grps[[colname]] = annotation[,colname] %>% unique
-        n = n + length(grps[[colname]])            
-    }
-    anno_colors = list()
-    pal = rep(pal,n %/% (length(pal)+1) +1)
-    s = 1
-    for (g in names(grps)){
-        if (g %in% already_set){
-            anno_colors[[g]] = annotation_colors[[g]]
-        }else{
-            grp = grps[[g]]
-            e = length(grp)
-            cl = pal[s:(s+e-1)]
-            names(cl) = grp
-            anno_colors[[g]] = cl
-            s = s + e
-        }
-    }
-    anno_colors
-}
 
 
-yget_grps = function(glx,order=NULL){
+
+
+
+#' Get the enumerated values of a group column
+#'
+#' @param glx data.frame which stored group information
+#' @param order levels, in order
+#' @param col string or NULL, set the group coloumn by name in the glx, if NULL, check
+#'   c('Group','Clin_classification','g') in seq
+#'
+#' @return list of length 2, the 1st is the string representing which column is selected as the group col
+#' the 2nd is factor representing the values in the group column
+#' @export
+#'
+#' @examples
+yget_grps = function(glx,col=NULL,order=NULL){
     cols = colnames(glx)
-    if ('Group' %in% cols){
-        g = 'Group'
-    }else if ('Clin_classification' %in% cols){
-        g = 'Clin_classification'
-    }else if ('g' %in% cols){
-        g = 'g'
+    if (is.null(col)){
+        if ('Group' %in% cols){
+            g = 'Group'
+        }else if ('Clin_classification' %in% cols){
+            g = 'Clin_classification'
+        }else if ('g' %in% cols){
+            g = 'g'
+        }else{
+            stop("None of c('Group','Clin_classification','g') not in colnames(glx) ")
+        }
     }else{
-        stop("None of c('Group','Clin_classification','g') not in colnames(glx) ")
+        stopifnot(col %in% cols)
+        g = col
     }
     grps = colData[[g]] %>% unique
     if (!is.null(order)){
         grps = factor(grps,levels=order)
+    }else{
+        grps = factor(grps)
     }
     list(col=g,grps=grps)
 }
 
+#' Title
+#'
+#' @param x character vector
+#'
+#' @return TRUE if x is a color else FALSE
+#' @export
+#'
+#' @examples
+is.color = function(x){
+    tryCatch(expr = {
+        grDevices::col2rgb('abc')
+        return(TRUE)
+    }
+    ,error = function(e){
+        return(FALSE)
+    })
+}
 
 # library('pheatmap')
 # library('RColorBrewer')
-#' force_exe if nrow(mat) > 2000 or ncol(mat) > 1000, stop plotting unless force_exe is TRUE
-#' clustering_method same as in hclust 
-#' the agglomeration method to be used. This should be (an unambiguous abbreviation of) one of 
-#' "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), 
-#' "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#' Plot heatmap using ComplexHeatmap::Heatmap
+#' @param mat
+#' @param colData
+#' @param bygroup
+#' @param anno.palette
+#' @param zscore.rize
+#' @param force_exe if nrow(mat) > 2000 or ncol(mat) > 1000, stop plotting unless force_exe is TRUE
+#' @param clustering_method clustering_method same as in hclust the agglomeration method to be used. This should be (an unambiguous abbreviation of) one of "ward.D", "ward.D2", "single", "complete", "average" (= UPGMA), "mcquitty" (= WPGMA), "median" (= WPGMC) or "centroid" (= UPGMC).
+#' @param cluster_rows
+#' @param cluster_cols
+#' @param color
+#' @param fontsize
+#' @param cellwidth
+#' @param cellheight
+#' @param border_color
+#' @param treeheight_row
+#' @param annotation_colors
+#' @param show_rownames
+#' @param show_colnames
+#' @param breaks
+#' @param fontsize_col
+#' @param ... other paramters pass to ComplexHeatmap::Heatmap
 yplot_heatmap = function(mat
                         ,colData=NULL
                         ,bygroup=FALSE
                         ,anno.palette = 'npg'
                         ,zscore.rize=TRUE
                         ,force_exe=FALSE
-                     
+
                         ,clustering_method = 'ward.D2' #
                         ,cluster_rows = TRUE
                         ,cluster_cols = TRUE
-                         
-                        ,color = colorRampPalette(c('blue', "white",'red'))(51)
+
+                        ,color = 'default'
                         ,fontsize = 14
                         ,cellwidth = 3
                         ,cellheight = 0.2
@@ -231,7 +261,7 @@ yplot_heatmap = function(mat
         bygroup = FALSE
         print('colData is NULL, set bygroup=FALSE')
     }
-    
+
     if ('data.frame' %in% class(mat)){
         mat = as.matrix(mat)
     }
@@ -240,7 +270,7 @@ yplot_heatmap = function(mat
     }else{
         stop('Unsupported mat type, must be matrix or numeric data.frame')
     }
-    
+
     if (((nrow(mat) > 2000) || (ncol(mat) > 1000)) && (force_exe==FALSE)){
         stop('too many rows, set force_exe = T to continue!')
     }
@@ -250,11 +280,18 @@ yplot_heatmap = function(mat
         mat = mat %>% yscale_rows()
         print('Standarizing input mat -> N(0,1)')
     }
-        
+    if (length(color)==1){
+
+    }
+    if (color=='default'){
+        color = colorRampPalette(c('blue', "white",'red'))(51)
+    }else if (str_detect(color,'~')){
+
+    }
     x = yget_grps(colData)
     grps = x[['grps']] # all groups
     col = x[['col']] # column name
-    
+
     sub.heatmap = list()
     if (bygroup == TRUE){
         col_orders = c()
@@ -280,88 +317,30 @@ yplot_heatmap = function(mat
                                     ,breaks = breaks
                                     ,fontsize_col = fontsize_col
                                     ,...
-                                    )    
-            .labels = res$tree_col$labels 
+                                    )
+            .labels = res$tree_col$labels
             sub.heatmap[[g]] = res
             col_orders = c(col_orders,.labels)
-            
+
         }
-        
+
         cluster_cols = FALSE
         print('bygroup is TRUE, set cluster_cols=FALSE')
         mat = mat[,col_orders]
     }
 
-    res=pheatmap::pheatmap(mat
-            ,color = color
-            ,annotation = colData
-              
-            ,cluster_rows = cluster_rows
-            ,cluster_cols = cluster_cols
-            ,clustering_method = clustering_method
-            ,fontsize = fontsize
-            ,cellwidth = cellwidth
-            ,cellheight = cellheight
-            ,border_color = border_color
-            ,treeheight_row = treeheight_row
-            ,annotation_colors = anno_color
-            ,show_rownames = show_rownames
-            ,show_colnames = show_colnames
-            ,breaks = breaks
-            ,fontsize_col = fontsize_col
-            ,...
-        )
-    
-    if (bygroup == FALSE){
-        col_orders = res$tree_col$labels
-    }
-    return(list(mat=mat,gg=res,col.orders=col_orders,sub.heatmap=sub.heatmap))
 
-}
-#-----------------
-
-yplot_volcano_using_de = function(diff_expr, value_var = 'padj',export=FALSE,threshold=c(-2,2),p=0.05,add_label=FALSE,...){
-    if (diff_expr %>% is.data.frame){
-        de = diff_expr
-    }else{
-        de = diff_expr %>% data.frame
-    }
-    de$diffexpressed <- "NO"
-    # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
-    de$diffexpressed[de$log2FoldChange > threshold[2] & de$padj < p] <- "UP"
-    # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-    de$diffexpressed[de$log2FoldChange < threshold[1] & de$padj < p] <- "DOWN"
-    de$diffexpressed = factor(de$diffexpressed,levels=c('UP','NO','DOWN'))
-    de$y = -log10(de[[value_var]])
-    if (add_label){
-        library(ggrepel)
-        de$delabel <- NA
-        de$gene_symbol = de %>% rownames
-        de$delabel[de$diffexpressed != "NO"] <- de$gene_symbol[de$diffexpressed != "NO"]
-        g <- ggplot(data=de, aes(x=log2FoldChange, y=y, col=diffexpressed, label=delabel))+
-            geom_point(alpha=0.7)+
-            geom_text_repel(max.iter=10, box.padding = 1)
-    }else{
-        g <- ggplot(data=de, aes(x=log2FoldChange, y=y, col=diffexpressed))+
-            geom_point(alpha=0.7)
-    }
-    if (value_var=='padj'){
-        old_value_var = value_var
-        value_var = 'FDR'
-    }
-    g = g + theme_minimal() + 
-            ylab(paste0("-log10(",value_var,")")) +
-            scale_color_manual(values=c("red", "gray", "blue")) +
-            geom_vline(xintercept=threshold, col="gray",linetype='longdash') +
-            geom_hline(yintercept=-log10(p), col="gray",linetype='longdash')
-    
-    # value_var = old_value_var
-    g %>% ydumpto(export = export, ...)
-    
-    list(gg=g,de=de)
-}
-#-----------------
-
+#' Title
+#'
+#' @param key
+#' @param args
+#' @param p
+#' @param .para_list
+#'
+#' @return
+#' @export
+#'
+#' @examples
 yrun = function(key=NULL, args = NULL, p=NULL, .para_list=para_list){
     if (!is.null(key)) p = .para_list[[key]]
     stopifnot(!(is.null(key)&&is.null(p))) # stop if you do not provide key and p
@@ -373,24 +352,24 @@ yrun = function(key=NULL, args = NULL, p=NULL, .para_list=para_list){
     for (i in p$requires){
         library(package = i, character.only = T)
     }
-    
-    func = get(p$func,envir = .GlobalEnv)    
-    
+
+    func = get(p$func,envir = .GlobalEnv)
+
     func %>% do.call(args=argv)
 }
-#-----------------
+
 
 library(maftools)
 yplot_oncoplot = function(laml=NULL, maf_=NULL, gl_=NULL
                         ,frm='export' #
                         ,only_12_cols = TRUE
-                        
+
                         ,worker=NULL #
                         ,flag = 'oncoplot' #
                         ,outputdir='./export' #
                         ,export=FALSE #
                         ,putdatatable=F
-                        
+
                         ,unique_on='default'
                         ,color_palette_type='snv'
                         ,height=NULL,width=NULL
@@ -414,7 +393,7 @@ yplot_oncoplot = function(laml=NULL, maf_=NULL, gl_=NULL
     }else if(!is.null(laml)){
         stopifnot(laml %>% class == "MAF")
         gl_ = laml %>% getClinicalData
-        
+
     }else{
         stop ("maf_,gl_,laml all NULL")
     }
@@ -441,7 +420,7 @@ yplot_oncoplot = function(laml=NULL, maf_=NULL, gl_=NULL
     }else{
         colors=COL_SNV
     }
-       
+
     argv = list(maf=laml,top=top, colors = colors
              ,removeNonMutated=removeNonMutated
              ,clinicalFeatures = clinicalFeatures
@@ -449,8 +428,8 @@ yplot_oncoplot = function(laml=NULL, maf_=NULL, gl_=NULL
              ,annotationColor = annotationColor
              ,writeMatrix = putdatatable
             )
-    argv <- argv %>% ypush(list(...),.expand = TRUE) 
-    
+    argv <- argv %>% ypush(list(...),.expand = TRUE)
+
 
     oncoplot %>% do.call(args=argv)
     if (export != FALSE){
@@ -474,7 +453,7 @@ yplot_oncoplot = function(laml=NULL, maf_=NULL, gl_=NULL
     else return (argv)
 }
 
-#-----------------
+
 
 yplot_oncoplot2 = function(laml=NULL, maf_=NULL, gl_=NULL
                         # custom func params
@@ -502,9 +481,9 @@ yplot_oncoplot2 = function(laml=NULL, maf_=NULL, gl_=NULL
     # retmode if 'laml' return laml = read.maf(maf_,gl_)
     #         if NULL, or others return NULL
     # using laml instead of maf_,gl_ on cnv plot will cause an error @2022-03-08
-    
+
     laml = yload_laml_maf(maf_ = maf_,gl_ = gl_,laml = laml,only_12_cols = T)
-    
+
     gl_ = laml %>% getClinicalData
     # <drop> drop duplicated rows to eliminate false 'Multi_Hit'
     # NOTE: <drop> will affect <getname> results, makes it to put contents instead of name, so must do <drop> after <getname>
@@ -518,13 +497,13 @@ yplot_oncoplot2 = function(laml=NULL, maf_=NULL, gl_=NULL
     # </drop>
     argv = yget_args(...)
     formal = argv %>% names
-    
+
     # set default dot color palette
     if (!'colors' %in% formal){
         cols = yget_gc_anno_colors(color_palette)
         argv$colors = cols
     }
-    
+
     if (is.null(height)){
         argv$height = round(top/3,1.5)
     }
@@ -577,7 +556,7 @@ yplot_oncoplot2 = function(laml=NULL, maf_=NULL, gl_=NULL
     else return (argv)
 }
 
-#-----------------
+
 
 yplot_forestplot = function(laml=NULL,maf_=NULL,gl_=NULL,
                              include_total=F,
@@ -594,7 +573,7 @@ yplot_forestplot = function(laml=NULL,maf_=NULL,gl_=NULL,
     laml = yload_laml_maf(maf_,gl_,laml)
     laml %>% yget_subset_maf(include_total = include_total) %>% combn(2, simplify = F) %>% map(
         function(i){
-            n = names(i)        
+            n = names(i)
             xn = n[[1]]
             yn = n[[2]]
             x = i[[xn]]
@@ -622,8 +601,8 @@ yplot_forestplot = function(laml=NULL,maf_=NULL,gl_=NULL,
                                    ,outputdir=outputdir
                                    ,...
                                   )
-            
-            res[[label]] <<- vs$results 
+
+            res[[label]] <<- vs$results
         }
     )
     if (ret_data==TRUE){
@@ -631,7 +610,7 @@ yplot_forestplot = function(laml=NULL,maf_=NULL,gl_=NULL,
     }
 }
 
-#-----------------
+
 
 yplot_coOncoplot = function(laml=NULL,maf_=NULL,gl_=NULL,
                              include_total=F,
@@ -642,7 +621,7 @@ yplot_coOncoplot = function(laml=NULL,maf_=NULL,gl_=NULL,
     laml = yload_laml_maf(maf_,gl_,laml)
     laml %>% yget_subset_maf(include_total = include_total) %>% combn(2, simplify = F) %>% map(
         function(i){
-            n = names(i)        
+            n = names(i)
             xn = n[[1]]
             yn = n[[2]]
             x = i[[xn]]
@@ -658,29 +637,19 @@ yplot_coOncoplot = function(laml=NULL,maf_=NULL,gl_=NULL,
         }
     )
 }
-#-----------------
 
-yloop = function(x,func){
-    l = length(formals(func))
-    if (l==3) for (i in 1:length(x)){
-        func(x[[i]],names(x[i]),i)
-    }else if (l==2)  for (i in 1:length(x)){
-        func(x[[i]],names(x[i]))
-    }else if (l==1)  for (i in 1:length(x)){
-        func(x[[i]])
-    }
-}
-#-----------------
 
-yplot_TiTvplot = function (laml = NULL, maf_ = NULL, gl_ = NULL, export = F, plot_subgrp = T, include_total = T, 
-    outputdir = outputdir, worker = NULL, putdatatable = F, sample_order_df = NULL, 
+
+
+yplot_TiTvplot = function (laml = NULL, maf_ = NULL, gl_ = NULL, export = F, plot_subgrp = T, include_total = T,
+    outputdir = outputdir, worker = NULL, putdatatable = F, sample_order_df = NULL,
     ...) {
-    # sample_order_matrix, like glx/tmb generated by tmb barplot, 
+    # sample_order_matrix, like glx/tmb generated by tmb barplot,
     # contains ['g','Custom_Label'] ordered sample id named 'Custom_Label', where 'g' is used to apply order to subgroups
-    
+
     laml = yload_laml_maf(maf_, gl_, laml)
-    
-    res =  laml %>% yget_subset_maf(include_total = include_total) %>% 
+
+    res =  laml %>% yget_subset_maf(include_total = include_total) %>%
         ymap(function(x, n) {
             print(n)
             laml.titv = titv(maf = x, plot = FALSE, useSyn = TRUE)
@@ -688,30 +657,30 @@ yplot_TiTvplot = function (laml = NULL, maf_ = NULL, gl_ = NULL, export = F, plo
             ylog("[INFO] plot ", n)
             argv = list(res = laml.titv)
             if (!(sample_order_df %>% is.null)) {
-                sampleOrder = sample_order_df[sample_order_df$g == 
+                sampleOrder = sample_order_df[sample_order_df$g ==
                   n, "Custom_Label"]
             }
             else {
                 sampleOrder = NULL
             }
-            plotTiTv %>% ydumpto(export = n, flag = "TiTv", 
-                outputdir = outputdir, args = argv, worker = worker, 
+            plotTiTv %>% ydumpto(export = n, flag = "TiTv",
+                outputdir = outputdir, args = argv, worker = worker,
                 sampleOrder = sampleOrder, ...)
             if (putdatatable == TRUE) {
                 for (i in laml.titv %>% names) {
-                  laml.titv[[i]] %>% ydumpto(export = i %>% str_replace(fixed("."), 
-                    "_"), ext = "txt", flag = "titv_data", prefix = n, 
+                  laml.titv[[i]] %>% ydumpto(export = i %>% str_replace(fixed("."),
+                    "_"), ext = "txt", flag = "titv_data", prefix = n,
                     outputdir = outputdir, worker = worker)
                 }
             }
-            plotTiTv %>% R.utils::doCall(args = argv, sampleOrder = sampleOrder, 
+            plotTiTv %>% R.utils::doCall(args = argv, sampleOrder = sampleOrder,
                 ...)
             laml.titv
         })
     res
 }
 
-#-----------------
+
 
 yplot_lollipopplot = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
         ,include_total=T
@@ -753,19 +722,19 @@ yplot_lollipopplot = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
         })
     }
 }
-#-----------------
+
 
 yplot_somaticInteractions = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
                                         ,outputdir = 'export'
                                         ,include_total=T
                                         ,top=25
-                                        ,pvalue = c(0.05, 0.1) 
+                                        ,pvalue = c(0.05, 0.1)
                                       ,worker=WORKER
         ,...){
-    
+
     laml = yload_laml_maf(maf_,gl_,laml)
     plot_func = somaticInteractions
-    argv =  as.list(environment()) %>% ygetlast(formals(plot_func) %>% names) 
+    argv =  as.list(environment()) %>% ygetlast(formals(plot_func) %>% names)
     laml %>% yget_subset_maf(include_total = include_total) %>% yloop(function(x,n){
         argv$maf = x
         res = plot_func %>% ydumpto(export=export
@@ -777,11 +746,11 @@ yplot_somaticInteractions = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
                                 )
         res = plot_func %>% do.call(argv)
         ylog('plot ',n)
-        
-        NULL 
+
+        NULL
     })
 }
-#-----------------
+
 
 # functions suitable:  [somaticInteractions, lollipopPlot, oncoplot, drugInteractions, OncogenicPathways,
 #               PlotOncogenicPathways, ]
@@ -790,13 +759,13 @@ yplot_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
                     ,plot_func=NULL
                     ,outputdir = 'export'
                     ,include_total = T
-                    ,only_total = T    
+                    ,only_total = T
                     ,worker="A0"
         ,...){
     # plot_func in [somaticInteractions, lollipopPlot, oncoplot, drugInteractions, OncogenicPathways,
     #               PlotOncogenicPathways, ]
     laml = yload_laml_maf(maf_,gl_,laml)
-    
+
     if (is.name(plot_func)) {
         func_name = deparse(substitute(plot_func))
     } else if (plot_func %>% is.character) {
@@ -805,9 +774,9 @@ yplot_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
     } else if (is.function(plot_func)){
         func_name = 'plot_func'
     }
-    
-    argv =  as.list(match.call()) %>% ygetlast(formals(plot_func) %>% names) 
-    
+
+    argv =  as.list(match.call()) %>% ygetlast(formals(plot_func) %>% names)
+
     if (is.name(plot_func)) {
         func_name = deparse(substitute(plot_func))
     } else if (plot_func %>% is.character) {
@@ -816,11 +785,11 @@ yplot_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
     } else if (is.function(plot_func)){
         func_name = 'plot_func'
     }
-    
+
     if (only_total==TRUE){
         argv$maf = laml
         argv = argv %>% ygetlast(names(formals(plot_func)))
-#         return(list(plot_func,argv,names(formals(plot_func)))) 
+#         return(list(plot_func,argv,names(formals(plot_func))))
         res = plot_func %>% ydumpto(export=export
                                  ,flag = func_name
                                     ,suffix="ALL"
@@ -832,9 +801,9 @@ yplot_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
         ylog('plot ',func_name,', group: ALL')
     }else{
         laml %>% yget_subset_maf(include_total = include_total) %>% yloop(function(x,n){
-            argv$maf = x 
+            argv$maf = x
             argv = argv %>% ygetlast(names(formals(plot_func)))
-#             return(list(plot_func,argv))            
+#             return(list(plot_func,argv))
             res = plot_func %>% ydumpto(export=export
                                     ,suffix=n
                                      ,flag = func_name
@@ -847,9 +816,9 @@ yplot_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
             NULL
         })
     }
-    
+
 }
-#-----------------
+
 
 # functions suitable:  [coBarplot, coOncoplot, lollipopPlot2, mafCompare]
 yplot_vs_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
@@ -862,7 +831,7 @@ yplot_vs_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
     # plot_func in [somaticInteractions, lollipopPlot, oncoplot, drugInteractions, OncogenicPathways,
     #               PlotOncogenicPathways, ]
     laml = yload_laml_maf(maf_,gl_,laml)
-    
+
     if (plot_func %>% is.character) {
         func_name = plot_func
         plot_func = get(func_name,envir = .GlobalEnv)
@@ -874,9 +843,9 @@ yplot_vs_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
         stop('wrong argument @func_name type')
     }
     argv =  yget_args(...)
-    res = laml %>% 
-            yget_subset_maf(include_total = include_total) %>% 
-            combn(2,simplify = F) %>% 
+    res = laml %>%
+            yget_subset_maf(include_total = include_total) %>%
+            combn(2,simplify = F) %>%
             yloop(function(li){
                 print(li %>% class)
                 assign(x = 'li',value = li, envir = .GlobalEnv)
@@ -890,20 +859,20 @@ yplot_vs_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
                 if (func_name =='coOncoplot' && !(is.null(top))){
                     m1.genes = getGeneSummary(x)[1:top]
                     m2.genes = getGeneSummary(y)[1:top]
-                    mdt = merge(m1.genes[, .(Hugo_Symbol, MutatedSamples)], 
-                        m2.genes[, .(Hugo_Symbol, MutatedSamples)], by = "Hugo_Symbol", 
+                    mdt = merge(m1.genes[, .(Hugo_Symbol, MutatedSamples)],
+                        m2.genes[, .(Hugo_Symbol, MutatedSamples)], by = "Hugo_Symbol",
                         all = TRUE)
                     mdt$MutatedSamples.x[is.na(mdt$MutatedSamples.x)] = 0
                     mdt$MutatedSamples.y[is.na(mdt$MutatedSamples.y)] = 0
-                    mdt$max = apply(mdt[, .(MutatedSamples.x, MutatedSamples.y)], 
+                    mdt$max = apply(mdt[, .(MutatedSamples.x, MutatedSamples.y)],
                         1, max)
                     mdt = mdt[order(max, decreasing = TRUE)]
                     genes = mdt[, Hugo_Symbol]
                     argv = argv |> ypush(list(genes=genes))
                 }
                 argv1 = argv
-                argv = argv %>% 
-                        ypush(list(m1=x,m2=y,m1Name=xn,m2Name=yn,m1_name=xn,m2_name=yn),.expand = T) %>% 
+                argv = argv %>%
+                        ypush(list(m1=x,m2=y,m1Name=xn,m2Name=yn,m1_name=xn,m2_name=yn),.expand = T) %>%
                         ygetlast(plot_func %>% formals %>% names)
                 # print(names(argv))
                 print(paste0('Included groups ',tag))
@@ -921,8 +890,22 @@ yplot_vs_maf_byfunc = function(laml=NULL,maf_=NULL,gl_=NULL,export = F
 #     submafs
     res
 }
-#-----------------
 
+
+#' Title
+#'
+#' @param laml
+#' @param sig_ver
+#' @param export
+#' @param putdatatable
+#' @param outputdir
+#' @param worker
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 plot_cosmic_inner<-function(laml,sig_ver='v2',export=FALSE,putdatatable=FALSE,outputdir='export',worker=NULL,...){
 # official example has an additional parameter prefix='chr' which must be removed on our dataset
     laml.tnm = trinucleotideMatrix(maf = laml, add = TRUE, ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
@@ -934,17 +917,17 @@ plot_cosmic_inner<-function(laml,sig_ver='v2',export=FALSE,putdatatable=FALSE,ou
     # Error in crossprod(sig, x): non-conformable arguments
     rownames(laml.sig$signatures)<-colnames(laml.tnm$nmf_matrix)
     if (sig_ver == 'v2'){
-        ## Compate against original 30 signatures 
+        ## Compate against original 30 signatures
         laml.og30.cosm = compareSignatures(nmfRes = laml.sig, sig_db = "legacy")
         laml.cosm = laml.og30.cosm
     }else if (sig_ver == 'v3'){
-         ## Compate against updated version3 60 signatures 
+         ## Compate against updated version3 60 signatures
         laml.v3.cosm = compareSignatures(nmfRes = laml.sig, sig_db = "SBS")
         laml.cosm = laml.v3.cosm
     }else{
         stop('[sig_ver] Value Error!')
     }
-    
+
    #     xx<-pheatmap(mat = laml.og30.cosm$cosine_similarities, cluster_rows = FALSE, main = "cosine similarity against validated signatures")
     xx<-pheatmap(mat = laml.cosm$cosine_similarities, cluster_rows = FALSE, main = "cosine similarity against validated signatures")
     ## export cosine_similarity matrix
@@ -959,10 +942,10 @@ plot_cosmic_inner<-function(laml,sig_ver='v2',export=FALSE,putdatatable=FALSE,ou
                    prefix=sig_ver,
                   )
     if (sig_ver == 'v2'){
-        # plot against original 30 signatures 
+        # plot against original 30 signatures
         plotSignatures(nmfRes = laml.sig,title_size = 1.2, sig_db = "legacy")
         argv = list(nmfRes = laml.sig,
-                   title_size = 1.2, 
+                   title_size = 1.2,
                    sig_db = "legacy")
         plotSignatures %>% ydumpto(export=export,
                                    outputdir=outputdir,
@@ -971,12 +954,12 @@ plot_cosmic_inner<-function(laml,sig_ver='v2',export=FALSE,putdatatable=FALSE,ou
                                    prefix=sig_ver,
                                    args=argv
                                   )
-    }else 
+    }else
     if (sig_ver == 'v3'){
-         # plot against updated version3 60 signatures 
+         # plot against updated version3 60 signatures
         plotSignatures(nmfRes = laml.sig,title_size = 1.2, sig_db = "SBS")
         argv = list(nmfRes = laml.sig,
-                   title_size = 1.2, 
+                   title_size = 1.2,
                    sig_db = "SBS")
         plotSignatures %>% ydumpto(export=export,
                                    outputdir=outputdir,
@@ -986,13 +969,13 @@ plot_cosmic_inner<-function(laml,sig_ver='v2',export=FALSE,putdatatable=FALSE,ou
                                    args=argv
                                   )
     }
-    
+
 #     put.func(paste0(fname,'_similarity'),pheatmap::pheatmap,
-#              mat = laml.og30.cosm$cosine_similarities, 
+#              mat = laml.og30.cosm$cosine_similarities,
 #              cluster_rows = FALSE, main = "cosine similarity against validated signatures")
 #     dump.dfx(laml.sig,paste0('cosmic_',fname,'_signatures'))
-    
-    
+
+
 }
 
 yplot_cosmic <- function(laml=NULL,maf_=NULL,glx_=NULL
@@ -1015,7 +998,7 @@ yplot_cosmic <- function(laml=NULL,maf_=NULL,glx_=NULL
     if (only_plot_subgroups){
         res = list()
         for (g in grps){
-            res[[g]]= subsetMaf(laml,clinQuery=paste0('Clin_classification=="',g,'"'))  
+            res[[g]]= subsetMaf(laml,clinQuery=paste0('Clin_classification=="',g,'"'))
             if (export!=FALSE) export=names(res[g])
             plot_cosmic_inner(res[[g]],export=export,flag='CosSig'
                               ,prefix=sig_ver
@@ -1025,7 +1008,7 @@ yplot_cosmic <- function(laml=NULL,maf_=NULL,glx_=NULL
                               ,outputdir=outputdir
                               ,worker=worker
                              )
-            
+
         }
     }else{
         plot_cosmic_inner(laml,export=export
@@ -1035,17 +1018,17 @@ yplot_cosmic <- function(laml=NULL,maf_=NULL,glx_=NULL
                           ,putdatatable=putdatatable
                           ,outputdir=outputdir
                           ,worker=worker)
-        
+
     }
-       
+
 }
 
-#-----------------
+
 
 library("BSgenome.Hsapiens.UCSC.hg19")
 library('MutationalPatterns')
 
-#-----------------
+
 
 yget_cosmic_signature_ref = function(cosmic_ver='v2'){
     if (cosmic_ver=='v2'){
@@ -1103,7 +1086,7 @@ yplot_sig_contribution = function(laml=NULL
                                   ,...){
 
     laml = yload_laml_maf(maf_ =maf_,gl_ = glx_,laml=laml)
-    
+
     if (!is.null(laml)){
         glx = getClinicalData(laml)
     }
@@ -1172,23 +1155,23 @@ yplot_sig_contribution = function(laml=NULL
     }
 
     grps = glx[,'Clin_classification'] %>% unique()
-    
+
     res = list()
-    
+
     for (g in grps){
         sub_maf = subsetMaf(laml,clinQuery = paste0("Clin_classification == '",g,"'"))
         ## get absolute contribution by MutationalPatterns::fit_to_signatures
         resg = get_signature_contribution(sub_maf, cancer_signatures,plot=plot)
         ## gen relative contribution over each patient(column)
-        resg$contribution_rel = resg$contribution %>% 
-                                data.frame %>% 
-                                mutate(across(everything(), ~ . * 100 / sum(.))) %>% 
+        resg$contribution_rel = resg$contribution %>%
+                                data.frame %>%
+                                mutate(across(everything(), ~ . * 100 / sum(.))) %>%
                                 as.matrix
         res[[g]] = resg
     }
     res
 }
-#-----------------
+
 
 yget_known_cancer_signatures = function(cosmic_ver='v2'){
     tnn_order = c('A[C>A]A','A[C>A]C','A[C>A]G','A[C>A]T','C[C>A]A','C[C>A]C','C[C>A]G','C[C>A]T','G[C>A]A','G[C>A]C','G[C>A]G','G[C>A]T','T[C>A]A','T[C>A]C','T[C>A]G','T[C>A]T','A[C>G]A','A[C>G]C','A[C>G]G','A[C>G]T','C[C>G]A','C[C>G]C','C[C>G]G','C[C>G]T','G[C>G]A','G[C>G]C','G[C>G]G','G[C>G]T','T[C>G]A','T[C>G]C','T[C>G]G','T[C>G]T','A[C>T]A','A[C>T]C','A[C>T]G','A[C>T]T','C[C>T]A','C[C>T]C','C[C>T]G','C[C>T]T','G[C>T]A','G[C>T]C','G[C>T]G','G[C>T]T','T[C>T]A','T[C>T]C','T[C>T]G','T[C>T]T','A[T>A]A','A[T>A]C','A[T>A]G','A[T>A]T','C[T>A]A','C[T>A]C','C[T>A]G','C[T>A]T','G[T>A]A','G[T>A]C','G[T>A]G','G[T>A]T','T[T>A]A','T[T>A]C','T[T>A]G','T[T>A]T','A[T>C]A','A[T>C]C','A[T>C]G','A[T>C]T','C[T>C]A','C[T>C]C','C[T>C]G','C[T>C]T','G[T>C]A','G[T>C]C','G[T>C]G','G[T>C]T','T[T>C]A','T[T>C]C','T[T>C]G','T[T>C]T','A[T>G]A','A[T>G]C','A[T>G]G','A[T>G]T','C[T>G]A','C[T>G]C','C[T>G]G','C[T>G]T','G[T>G]A','G[T>G]C','G[T>G]G','G[T>G]T','T[T>G]A','T[T>G]C','T[T>G]G','T[T>G]T')
@@ -1239,6 +1222,7 @@ yget_signatures_related_all = function(laml,cosmic_ver = 'v2',rank=3,nrun=3,sing
     list(mut_mat=mut_mat,extracted_n_signatures_suit=custom_sigs,contribution=fit_res$contribution,tnm=laml.tnm)
 }
 
+
 yget_maftools_signatures = function(laml_or_tnm, rank = NA, cosmic_ver = 'v2', plot=FALSE, search_rank = FALSE, nTry =6 ){
     "extract N/rank signatures of group, the input patients are treated as a whole, and calculate the cosine similarity vs COSMIC v2/v3 signatures."
     if (is.na(rank) && search_rank == FALSE ){
@@ -1251,7 +1235,7 @@ yget_maftools_signatures = function(laml_or_tnm, rank = NA, cosmic_ver = 'v2', p
                     #, prefix = 'chr'
                    , add = TRUE
                    , ref_genome = "BSgenome.Hsapiens.UCSC.hg19")
-        
+
     }else if (cls == 'list' ){
         mask = names(laml_or_tnm) == c('nmf_matrix','APOBEC_scores')
         if (length(mask)==2 && all(mask)==TRUE){
@@ -1280,7 +1264,7 @@ yget_maftools_signatures = function(laml_or_tnm, rank = NA, cosmic_ver = 'v2', p
     c(laml.sig,laml.cosm)
 }
 
-#-----------------
+
 
 yplot_gistic_chrom <- function(dir,conf=95,export=FALSE,outputdir='export',worker=NULL,markBands = 'all',...){
     '@dir dir to the gistic2.0 output group folder
@@ -1308,8 +1292,20 @@ yplot_gistic_chrom <- function(dir,conf=95,export=FALSE,outputdir='export',worke
     gisticChromPlot %>% ydumpto(args=argv,export=export,outputdir=outputdir,worker=worker,...)
 
 }
-#-----------------
 
+
+
+#' Title
+#'
+#' @param df
+#' @param sel_col
+#' @param export
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
 yplot_venns = function(df,sel_col,export=F,...){
     library(VennDiagram)
     grps = df$Clin_classification %>% unique
@@ -1326,7 +1322,7 @@ yplot_venns = function(df,sel_col,export=F,...){
     }
     print(sets %>% names)
 
-    # generate params for venn plot function 
+    # generate params for venn plot function
     argv = list()
     for (l in 1:length(sets)){
         for (i in combn(1:length(sets),l,simplify = F)){
@@ -1335,7 +1331,7 @@ yplot_venns = function(df,sel_col,export=F,...){
                 r = Reduce(intersect,s) %>% length
                 argv[[str_flatten(c('n',i))]] = r
 
-            }else{            
+            }else{
                 r = length(s[[1]])
                 argv[[str_flatten(c('area',i))]] = r
             }
@@ -1350,8 +1346,8 @@ yplot_venns = function(df,sel_col,export=F,...){
             ind = TRUE
         ))
     print(argv %>% names)
-    
-    args = list(...) %>% 
+
+    args = list(...) %>%
             ypush(list(x =plot_func,
                        args=argv,
                        export=export,
@@ -1360,12 +1356,12 @@ yplot_venns = function(df,sel_col,export=F,...){
     if (!('suffix' %in% n)){
         args$suffix = sel_col
     }
-    
-    res = ydumpto %>% do.call(args)            
+
+    res = ydumpto %>% do.call(args)
     res
 }
 
-#-----------------
+
 
 library(Rtsne)
 yplot_tnse = function(normd,colData,group_col=NA,perplexity=NA,dims=2,...){
@@ -1374,13 +1370,13 @@ yplot_tnse = function(normd,colData,group_col=NA,perplexity=NA,dims=2,...){
     if (is.na(perplexity)){
         perplexity = floor((ncol(normd) - 1) / 3)
     }
-    
+
     res = Rtsne(t(normd),perplexity = perplexity,dims=dims,...)
     df = res$Y %>% data.frame(row.names = pids)
     colData2 = colData[pids,,drop=FALSE]
     df = cbind(df,colData2)
     res$df = df
-    
+
     col = colnames(colData)
     if (is.na(group_col)){
         if ('Group' %in% col) group_col='Group'
@@ -1399,5 +1395,5 @@ yplot_tnse = function(normd,colData,group_col=NA,perplexity=NA,dims=2,...){
     res$gg = gg
     res
 }
-#-----------------
+
 
