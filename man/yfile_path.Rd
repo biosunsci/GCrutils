@@ -2,7 +2,7 @@
 % Please edit documentation in R/io.R
 \name{yfile_path}
 \alias{yfile_path}
-\title{yfile_path}
+\title{Return nice format path values of file.path}
 \usage{
 yfile_path(...)
 }

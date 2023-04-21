@@ -30,14 +30,15 @@ Imports:
     RColorBrewer (>= 1.1),
     openxlsx (>= 4.2.5),
     jsonlite (>= 1.8.4),
-    ComplexHeatmap(>= 2.10.0),
-    ggplotify(>= 0.1.0),
+    ComplexHeatmap (>= 2.10.0),
+    ggplotify (>= 0.1.0),
     MutationalPatterns (>= 3.4.1),
     clusterProfiler,
-    survminer(>= 0.4.9),
-    survival)(>= 3.5),
+    survminer (>= 0.4.9),
+    survival (>= 3.5),
     VennDiagram(>= 1.7.3),
-    fs(>= 1.6.1)
+    fs (>= 1.6.1),
+    tools
 Suggests: 
     testthat (>= 3.0.0),
     BSgenome.Hsapiens.UCSC.hg19

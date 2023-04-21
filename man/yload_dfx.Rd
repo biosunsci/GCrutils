@@ -8,7 +8,7 @@ yload_dfx(
   li = NULL,
   frm = INPUTROOT,
   pattern = NULL,
-  ext = NULL,
+  fextname = NULL,
   worker = NULL,
   retmode = "local",
   verbose = TRUE,
@@ -19,15 +19,15 @@ yload_dfx(
 \arguments{
 \item{li}{overwritting <pattern> settings a character vector, if length(<li>)>1 generate a named list else generate
 the dataframe read, return is determined further by <retmode> a character vector whose element <i> refers to dfx
-names, if <i> is not started with c('/','~','./'), find <i>.<ext> in folder <frm> else use <i> as the path, ignore
+names, if <i> is not started with c('/','~','./'), find <i>.<fextname> in folder <frm> else use <i> as the path, ignore
 <frm> for the current <i> if input li is a data.frame it will be returned immediately}
 
 \item{frm}{a folder.path, all the data will be read from this path}
 
 \item{pattern}{a RegExpr to glob, return matched files, only acts when `li` is NULL}
 
-\item{ext}{basicly, <li> members do not include an extention name, ext is used to set the <li> extention name. set
-ext=NULL to only load exactly the name <li> provided. ext不会修改已经显式声明的扩展名，如li=c('abx.txt'),ext='dfx'
+\item{fextname}{basicly, <li> members do not include an extention name, fextname is used to set the <li> extention name. set
+fextname=NULL to only load exactly the name <li> provided. fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx'
 则读入仍是'abx.txt'而不是'abx.dfx'或'}
 
 \item{retmode}{}
@@ -39,7 +39,7 @@ df or list of dfs if retmode=='local', assign every df to .GlobalEnv if retmode=
 Load data.frame sheet from files
 }
 \details{
-依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `ext` both NULL
+依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `fextname` both NULL
   and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT, yfunc_args, read.table, %>%,
   modifyList, yslice, str_flatten, str_detect, fixed, ypush, str_sub, ypath_join
 }

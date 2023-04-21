@@ -2,26 +2,45 @@
 % Please edit documentation in R/io.R
 \name{ydumpto}
 \alias{ydumpto}
-\title{Title}
+\title{Dump objects into types of files depend on object class}
 \usage{
 ydumpto(
   x,
   fname = NULL,
-  export = NULL,
   outputdir = OUTPUTROOT,
   ext = NULL,
+  to_plain_txt = FALSE,
   prefix = NULL,
   flag = NULL,
   worker = NULL,
-  verbose = T,
   suffix = NULL,
-  mkdir = F,
+  verbose = T,
+  mkdir = FALSE,
   ...
 )
 }
 \arguments{
+\item{fname}{the file name to put,}
+
+\item{outputdir}{the folder to put the files, default is the global var [OUTPUTROOT]}
+
+\item{prefix, }{@param flag, @param worker, @param suffix tags add to the filename part of the
+output file}
+
+\item{verbose}{TRUE}
+
+\item{mkdir}{FALSE, if the destination dir does not exist, raise Error when FALSE, else create
+dirs to the destination dir}
+
 \item{...}{}
+
+\item{fextname}{NULL, if NULL or '', auto add extension name to the fname, else set the extension name
+to [fextname]}
 }
 \description{
-Title
+Dump objects into types of files depend on object class
+}
+\details{
+Please specify fextname='txt' if your fname contains '.', or the last part of .* will be used
+as extension names
 }

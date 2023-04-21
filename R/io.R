@@ -1,17 +1,35 @@
+tryCatch(
+    expr = {
+        cairo_pdf('data/test.pdf',5,5)
+        plot(c(1,2,3),c(4,5,6))
+        PDF_DEVICE <<- PDF_DEVICE
+        dev.off()
+    },
+    warning = function(w){
+        PDF_DEVICE <<- 'pdf'
+    },finally = {
+        tryCatch({ dev.off() }, error = function(e) {})
+        if (file.exists("data/test.pdf"))
+            file.remove('data/test.pdf')
+    }
+)
+
+# ------------- IO ---------------------
+
 #' Load data.frame sheet from files
 #'
-#' @details 依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `ext` both NULL
+#' @details 依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `fextname` both NULL
 #'   and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT, yfunc_args, read.table, %>%,
 #'   modifyList, yslice, str_flatten, str_detect, fixed, ypush, str_sub, ypath_join
 #'
 #' @param li overwritting <pattern> settings a character vector, if length(<li>)>1 generate a named list else generate
 #'   the dataframe read, return is determined further by <retmode> a character vector whose element <i> refers to dfx
-#'   names, if <i> is not started with c('/','~','./'), find <i>.<ext> in folder <frm> else use <i> as the path, ignore
+#'   names, if <i> is not started with c('/','~','./'), find <i>.<fextname> in folder <frm> else use <i> as the path, ignore
 #'   <frm> for the current <i> if input li is a data.frame it will be returned immediately
 #' @param frm a folder.path, all the data will be read from this path
 #' @param pattern a RegExpr to glob, return matched files, only acts when `li` is NULL
-#' @param ext basicly, <li> members do not include an extention name, ext is used to set the <li> extention name. set
-#'   ext=NULL to only load exactly the name <li> provided. ext不会修改已经显式声明的扩展名，如li=c('abx.txt'),ext='dfx'
+#' @param fextname basicly, <li> members do not include an extention name, fextname is used to set the <li> extention name. set
+#'   fextname=NULL to only load exactly the name <li> provided. fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx'
 #'   则读入仍是'abx.txt'而不是'abx.dfx'或'
 #' @param worker
 #' @param verbose
@@ -28,14 +46,14 @@
 yload_dfx = function(li = NULL,
                      frm = INPUTROOT,
                      pattern = NULL,
-                     ext = NULL,
+                     fextname = NULL,
                      worker = NULL,
                      retmode = 'local',
                      verbose = TRUE,
                      row.names = NULL,
                      ...) {
     # retmode in c('local','global')
-    # ext in c(str,NULL)
+    # fextname in c(str, NULL)
     # default parameters with custom one
     std_args = yfunc_args(utils::read.table)
     argv = list(
@@ -82,12 +100,12 @@ yload_dfx = function(li = NULL,
                      ' for its not a legal var name',
                      .addtime = F)
             } else{
-                tmp = ysplit_file_name(ffname, ext = ext, mode = 'auto')
+                tmp = ysplit_file_name(ffname, fextname = fextname, mode = 'auto')
                 fname = tmp[[1]]
                 if (length(tmp) == 1) {
-                    ext = 'dfx'
+                    fextname = 'dfx'
                 } else if (length(tmp) == 2) {
-                    ext = tmp[[2]]
+                    fextname = tmp[[2]]
                 } else{
                     stop('wrong tmp length')
                 }
@@ -101,7 +119,7 @@ yload_dfx = function(li = NULL,
                         2
                     )
                 } else{
-                    files = files %>% ypush(c(myfrm, fname, ext))
+                    files = files %>% ypush(c(myfrm, fname, fextname))
                 }
             }
         }
@@ -111,28 +129,28 @@ yload_dfx = function(li = NULL,
         # files is list of ('path','file_name','ext_name')
         myfrm = file[[1]]
         vname = file[[2]]
-        ext = file[[3]]
+        fextname = file[[3]]
         if (vname %>% str_sub(1, 3) %>% str_detect('[A-Z][0-9]\\_'))
             worker = NULL
         if (!is.null(worker)) {
-            ffname = str_flatten(c(worker, '_', vname, '.', ext))
+            ffname = str_flatten(c(worker, '_', vname, '.', fextname))
             input = yfile_path(myfrm, ffname)
             if (!file.exists(input)) {
                 ylog(
                     '[WARN] prefix with <worker> file not found, retry without <worker> one',
                     .addtime = FALSE
                 )
-                ffname = str_flatten(c(vname, '.', ext))
+                ffname = str_flatten(c(vname, '.', fextname))
             }
         } else{
-            ffname = str_flatten(c(vname, '.', ext))
+            ffname = str_flatten(c(vname, '.', fextname))
         }
         input = yfile_path(myfrm, ffname)
 
         if (verbose == TRUE)
             ylog("read [", ffname , "] as '", vname, "' from > ", myfrm)
 
-        if (ext == 'gmt') {
+        if (fextname == 'gmt') {
             # library(GSVA)
             original_gmt_GSVA <- readLines(input)
             strsplit_no_name <- function(gmt.list_layer) {
@@ -151,7 +169,7 @@ yload_dfx = function(li = NULL,
             }
             res[[vname]] = ref_df
         } else{
-            "ext == {txt,dfx,...} "
+            "fextname == {txt,dfx,...} "
             argv$file = input
             res[[vname]] = utils::read.table %>% do.call(args = argv)
         }
@@ -229,13 +247,13 @@ ysave = function (fc = NULL,
     if (name == "") {
         name = "default"
     }
-    ext = 'pdf'
+    fextname = 'pdf'
     if (l == 1 && t == 'list') {
-        ext = 'xlsx'
-        fpath = file.path(outputdir, paste0(name , '.' , ext))
+        fextname = 'xlsx'
+        fpath = yfile_path(outputdir, paste0(name , '.' , fextname))
 
         # save list of data.frames into excel
-        #         file <- file.path('report',"data_titv.xlsx")
+        #         file <- yfile_path('report',"data_titv.xlsx")
         # wb <- openxlsx::createWorkbook()
         #if (names(fc) %>% is.null)
         seqnames <-
@@ -298,8 +316,8 @@ ysave = function (fc = NULL,
         openxlsx::saveWorkbook(wb, file = fpath, overwrite = TRUE)
 
     } else if (l == 1 && t == "call") {
-        ext = 'pdf'
-        fpath = file.path(outputdir, paste0(name , '.', ext))
+        fextname = 'pdf'
+        fpath = yfile_path(outputdir, paste0(name , '.', fextname))
 
         tryCatch(expr = {
             grDevices::cairo_pdf(fpath, width = WIDTH, height = HEIGHT)
@@ -308,8 +326,8 @@ ysave = function (fc = NULL,
             dev.off()
         })
     } else if (c('ggplot', 'pheatmap', 'Heatmap') %>% intersect(t) %>% length > 0) {
-        ext = 'pdf'
-        fpath = file.path(outputdir, paste0(name , '.', ext))
+        fextname = 'pdf'
+        fpath = yfile_path(outputdir, paste0(name , '.', fextname))
 
         tryCatch(expr = {
             grDevices::cairo_pdf(
@@ -323,8 +341,8 @@ ysave = function (fc = NULL,
             dev.off()
         })
     } else if (c('tibble', 'data.frame', 'matrix') %>% intersect(t) %>% length > 0) {
-        ext = 'xlsx'
-        fpath = file.path(outputdir, paste0(name , '.', ext))
+        fextname = 'xlsx'
+        fpath = yfile_path(outputdir, paste0(name , '.', fextname))
         title_line = table_title_lines[[1]]
         rowNames = yhas_rownames(fc)
         wb = openxlsx::createWorkbook()
@@ -357,25 +375,28 @@ ysave = function (fc = NULL,
         }
         openxlsx::saveWorkbook(wb, file = fpath, overwrite = TRUE)
     }
-    ylog("write 1", ext, "at", fpath, verbose = TRUE)
+    ylog("write 1", fextname, "at", fpath, verbose = TRUE)
 }
 
 
 
-#' Title
+#' Dump objects into types of files depend on object class
 #'
 #' @param x
-#' @param fname
-#' @param export
-#' @param outputdir
-#' @param ext
-#' @param prefix
-#' @param flag
-#' @param worker
-#' @param verbose
-#' @param suffix
-#' @param mkdir
+#' @param fname the file name to put,
+#' @param outputdir the folder to put the files, default is the global var [OUTPUTROOT]
+#' @param fextname NULL, if NULL or '', auto add extension name to the fname, else set the extension name
+#'   to [fextname]
+#' @param prefix, @param flag, @param worker, @param suffix tags add to the filename part of the
+#'   output file
+#' @param verbose TRUE
+#' @param mkdir FALSE, if the destination dir does not exist, raise Error when FALSE, else create
+#'   dirs to the destination dir
 #' @param ...
+#'
+#' @details
+#' Please specify fextname='txt' if your fname contains '.', or the last part of .* will be used
+#' as extension names
 #'
 #' @return
 #' @importFrom grDevices dev.off
@@ -384,90 +405,85 @@ ysave = function (fc = NULL,
 #' @examples
 ydumpto = function(x,
                    fname = NULL,
-                   export = NULL,
                    outputdir = OUTPUTROOT,
                    ext = NULL,
+                   to_plain_txt = FALSE,
                    prefix = NULL,
                    flag = NULL,
                    worker = NULL,
-                   verbose = T,
                    suffix = NULL,
-                   mkdir = F,
+                   verbose = T,
+                   mkdir = FALSE,
                    ...) {
-    # OUTER_USAGE = c('fname',"fname",'export',
-    #                 'outputdir','ext','prefix',
-    #                 'flag','worker','verbose',
-    #                 'suffix','mkdir')
 
-    if (is.null(fname) &&
-        is.null(export))
-        stop('fname export both NULL')
-    if (!is.null(export)) {
-        if (export == TRUE) {
-            fname = 'plot'
-        } else if (export == FALSE) {
-            return("export==FALSE, exporting aborted")
-        } else if (typeof(export) == 'character') {
-            fname = export %>% str_flatten()
-        } else {
-            stop('export must be boolean or string')
-        }
+    # assert non-Empty objs
+    if (is.null(fname))
+        stop('fname is NULL')
+    if (is.null(x))
+        stop('x is NULL')
+    if (tibble::is.tibble(x)){
+        x = as.data.frame(x)
+    }
+    # fpath is the final outputdir to use
+    # ffname is the final filename to use
+    # fextname is the final extentsion name to use
+
+    # determine fpath base on input fname and input outputdir
+    # if fname start with ../ or ./ or / or ~/ ignore outputdir else use outputdir
+    if (stringr::str_starts(fname,stringr::fixed('./')))
+        fpath = '.'
+    else{
+        fpath = fs::path_dir(fname)
+        if (!stringr::str_starts(fpath,'\\.\\./|/'))
+            fpath = outputdir
     }
 
-    # fname contains path '/'
-    if (fname %>% str_detect('/')) {
-        tmp = fname %>% ysplit_path()
-        if (length(tmp) > 1) {
-            outputdir = tmp[[1]]
-            fname = tmp[[2]]
-        } else{
-            fname = tmp[[2]]
-        }
-    }
+    fname = fs::path_file(fname)
+    ffname = tools::file_path_sans_ext(fname)
 
-    # fname contains ext i.e. '.'
-    if (fname %>% str_detect('.')) {
-        tmp = fname %>% ysplit_file_name(mode = 'auto', ext = ext)
-        if (length(tmp) > 1) {
-            fname = tmp[[1]]
-            ext = tmp[[2]]
-        } else{
-            fname = tmp[[1]]
-            ext = NULL
-        }
-    }
+    # determine the fextname based on input fextname and input fname
+    # fextname will be '' if fextname is NULL and not provide fname
+    if (!is.null(ext))
+        fextname = ext
+    else
+        fextname = fs::path_ext(fname)
 
-    # labels order : [worker,prefix,tag,export(fname),suffix]
-    fname = c(worker, flag, prefix, fname, suffix)  %>%
+
+    # add worker, flag, prefix, suffix labels to ffname, trim additional '_'
+    ffname = c(worker, flag, prefix, ffname, suffix)  %>%
         str_flatten(collapse = '_') %>%
         str_replace_all(pattern = fixed('__'), '_') %>%
         str_remove_all(pattern = '^_+|_+$')
 
-    if ((!is.null(ext)) && ext == 'json') {
-        attr(x, 'class') = c('json', class(x))
+    if (to_plain_txt == FALSE){
+        if (fextname == 'json') {
+            attr(x, 'class') = c('json', class(x))
+        }else if (fextname == 'RDS' && is.list(x)){
+            attr(x,'class') = c('RDS', class(x))
+        } else if (fextname == 'xlsx' && is.list(x)){
+            attr(x, 'class') = c('excelObj', class(x))
+        }
+    }else{
+        attr(x,'class') = c('PlainTXT',class(x))
     }
-    # out is generated
-    #return(list(fname=fname,ext=ext,outputdir=outputdir,verbose=verbose))
-    # if (class(x)=='function') .ydumpto(x,fname,ext,outputdir,verbose=verbose,args=args,...)
+
+
     if (mkdir == TRUE && !file.exists(outputdir)) {
-        dir.create(outputdir, recursive = TRUE, mode = '0755')
+        dir.create(outputdir, recursive = TRUE, mode = '0644')
     } else if (mkdir == FALSE && !file.exists(outputdir)) {
         ylog(outputdir, 'does not exist.', .addtime = FALSE)
         stop('!')
     }
-    argv = yget_args(...)
-    if (is.null(x)) {
-        return(argv)
-    } else{
-        .ydumpto %>%  do.call(argv)
-    }
+
+    .ydumpto(x,fpath=fpath,ffname=ffname,fextname=fextname,verbose=verbose,...)
+
 }
 
-# -----------utils-----------------------------------
+# -------------------------- utils --------------------------------
 
 
 
-#' yfile_path
+#' Return nice format path values of file.path
 #'
 #' join given list of folders, likely the R version of os.path.join
 #' may cause some unpredictable return values at certain circumstances
@@ -479,36 +495,35 @@ ydumpto = function(x,
 #'
 #' @examples
 yfile_path = function(...){
-    args = list(...)
-    args = as.character(args) %>% str_replace('\\\\','/')
-    res = paste(args, sep = "/", collapse = "/")
-    res = gsub("/[.]{0,1}/", "/", res)
-    #     res = gsub("/[\\\\/]{2}/", "/", res)
-    res
+    p = file.path(...)
+    p %>% str_replace(fixed('\\'),'/') %>% str_replace(fixed('//'),'/') %>% str_replace(fixed('/./'),'/')
+    # args = list(...)
+    # args = as.character(args) %>% str_replace('\\\\','/')
+    # res = paste(args, sep = "/", collapse = "/")
+    # res = gsub("/[.]{0,1}/", "/", res)
 }
 
-#' Extract parameters for a given function
+#' Extract vars in the parent frame, then filtered vars by a given function's formals
 #'
-#' Get the arguments whose name match the given function(.f)'s formal arg names in the input args lists
+#' Get the arguments whose name match the given function(.f)'s formal arg names in the input args
+#' lists
 #'
 #' @param ... filter all the args by the formals of .f, return all matched,
-#' @param .f is.function() and is the filter function, the returned args list will match the formals of the .f
+#' @param .f .filter, is.function() and is the filter function, the returned args list will match
+#'   the formals of the .f
 #'
 #' @return like `list(...)[intersect(list(...)%>%names,formals(.f)%>%names)]`
 #' @export
-#' @example
-#' data(mtcars)
-#' yget_args(data=mtcars,a='a',b='b',.f=ggplot) # list(data=mtcars)
+#' @example data(mtcars) yget_args(data=mtcars,a='a',b='b',.f=ggplot) # list(data=mtcars)
 yget_args = function (..., .f = NULL) {
-    # if ((!is.null(.filter))&&(.f %>% is.null)){
-    #     .f = .filter
-    # }
+    stopifnot(is.null(.f) || is.function(.f))
     dots = list(...)
-    pf <- parent.frame()
+    # get all the vars including arguments and vars define in the parent function
+    pf = parent.frame()
     pf = pf %>% as.list %>% utils::modifyList(dots)
     if (!is.null(.f)) {
         formal_args = formals(.f) %>% names
-        pf = pf %>% ysubset_list_named(formal_args)
+        pf = ysubset_list_named(pf,formal_args)
     }
     pf
 }
@@ -570,11 +585,11 @@ yfunc_args <- function(func=NULL, get_default_values = FALSE) {
 #' Split a file name string into fname, extName
 #'
 #' @param str
-#' @param ext set extention name of
+#' @param fextname set extention name of
 #' @param mode in ['auto','keep','add','replace'] default 'auto', behave, see example
-#' @param ... diff depend on str and ext values
+#' @param ... diff depend on str and fextname values
 #' @param str
-#' @param ext
+#' @param fextname
 #' @param mode
 #' @param ...
 #'
@@ -582,31 +597,31 @@ yfunc_args <- function(func=NULL, get_default_values = FALSE) {
 #' @export
 #'
 #' @example
-#' ysplit_file_name('a.b.c.txt',ext=NULL,mode='auto') # c('a.b.c', 'txt')
-#' ysplit_file_name('abc',ext='dfx',mode='auto') # c('abc', 'dfx')
-#' ysplit_file_name('abc.txt',ext='dfx',mode='auto') # c('abc', 'dfx')
-#' ysplit_file_name('a.b.c.txt',ext='dfx',mode='auto') # c('a.b.c', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname=NULL,mode='auto') # c('a.b.c', 'txt')
+#' ysplit_file_name('abc',fextname='dfx',mode='auto') # c('abc', 'dfx')
+#' ysplit_file_name('abc.txt',fextname='dfx',mode='auto') # c('abc', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname='dfx',mode='auto') # c('a.b.c', 'dfx')
 #'
-#' ysplit_file_name('a.b.c.txt',ext=NULL,mode='replace') # c('a.b.c')
-#' ysplit_file_name('abc',ext='dfx',mode='replace') # c('abc', 'dfx')
-#' ysplit_file_name('abc.txt',ext='dfx',mode='replace') # c('abc', 'dfx')
-#' ysplit_file_name('a.b.c.txt',ext='dfx',mode='replace') # c('a.b.c', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname=NULL,mode='replace') # c('a.b.c')
+#' ysplit_file_name('abc',fextname='dfx',mode='replace') # c('abc', 'dfx')
+#' ysplit_file_name('abc.txt',fextname='dfx',mode='replace') # c('abc', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname='dfx',mode='replace') # c('a.b.c', 'dfx')
 #'
-#' ysplit_file_name('a.b.c.txt',ext=NULL,mode='keep') # c('a.b.c', 'txt')
-#' ysplit_file_name('abc',ext='dfx',mode='keep') # c('abc')
-#' ysplit_file_name('abc.txt',ext='dfx',mode='keep') # c('abc', 'txt')
-#' ysplit_file_name('a.b.c.txt',ext='dfx',mode='keep') # c('a.b.c', 'txt')
+#' ysplit_file_name('a.b.c.txt',fextname=NULL,mode='keep') # c('a.b.c', 'txt')
+#' ysplit_file_name('abc',fextname='dfx',mode='keep') # c('abc')
+#' ysplit_file_name('abc.txt',fextname='dfx',mode='keep') # c('abc', 'txt')
+#' ysplit_file_name('a.b.c.txt',fextname='dfx',mode='keep') # c('a.b.c', 'txt')
 #'
-#' ysplit_file_name('abc',ext='dfx',mode='add') # c('abc', 'dfx')
-#' ysplit_file_name('a.b.c.txt',ext=NULL,mode='add') # c('a.b.c', 'txt')
-#' ysplit_file_name('abc.txt',ext='dfx',mode='add') # c('abc', 'txt', 'dfx')
-#' ysplit_file_name('a.b.c.txt',ext='dfx',mode='add') # c('a.b.c', 'txt', 'dfx')
+#' ysplit_file_name('abc',fextname='dfx',mode='add') # c('abc', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname=NULL,mode='add') # c('a.b.c', 'txt')
+#' ysplit_file_name('abc.txt',fextname='dfx',mode='add') # c('abc', 'txt', 'dfx')
+#' ysplit_file_name('a.b.c.txt',fextname='dfx',mode='add') # c('a.b.c', 'txt', 'dfx')
 #'
-ysplit_file_name = function(str, ext = NULL, mode = 'auto', ...) {
-    if (!is.null(ext)) {
-        # 判断ext首字符是不是点“.” 有点则去掉
-        if (ext %>% str_sub(1, 1) == '.')
-            ext = ext %>% str_sub(2, )
+ysplit_file_name = function(str, fextname = NULL, mode = 'auto', ...) {
+    if (!is.null(fextname)) {
+        # 判断fextname首字符是不是点“.” 有点则去掉
+        if (fextname %>% str_sub(1, 1) == '.')
+            fextname = fextname %>% str_sub(2, )
         .count = str_count(str, fixed('.'))
         if (.count == 0)
             res = c(str)
@@ -630,17 +645,17 @@ ysplit_file_name = function(str, ext = NULL, mode = 'auto', ...) {
         ext_name = res %>% yslice(-1)
     }
     if (mode == 'auto') {
-        if (ext |> is.null()) {
+        if (fextname %>% is.null()) {
             res = c(file_name, ext_name)
         } else{
-            res = c(file_name, ext)
+            res = c(file_name, fextname)
         }
     } else if (mode == 'keep')
         res = c(file_name, ext_name)
     else if (mode == 'add')
-        res = c(file_name, ext_name, ext)
+        res = c(file_name, ext_name, fextname)
     else if (mode == 'replace')
-        res = c(file_name, ext)
+        res = c(file_name, fextname)
     res
 }
 
@@ -717,161 +732,277 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
 }
 
 
-#' @importFrom grDevices dev.off
 .ydumpto.call = function(x,
-                         fname,
-                         ext = NULL,
-                         outputdir = OUTPUTROOT,
-                         verbose = TRUE,
-                         row.names = FALSE,
+                         fpath,
+                         ffname,
+                         fextname,
+                         verbose=TRUE,
                          ...) {
     # if (row.names %>% is.null) row.names= FALSE
-    if (is.null(ext))
-        ext = 'pdf'
-    file = yfile_path(outputdir, paste(fname, ext, sep = '.'))
+    if (is.null(fextname))
+        fextname = 'pdf'
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
 
-    if (ext %in% c('png', 'svg')) {
-        dev = get(ext, .GlobalEnv)
-    } else if (ext == 'pdf') {
-        dev = get('grDevices::cairo_pdf', .GlobalEnv)
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
     }
 
     tryCatch({
         dev(file, ...)
         eval(x)
-        ylog('[plot args]', args %>% names, ',', .addtime = F)
     }, finally = {
         dev.off()
     })
-
+    ylog('write 1 <', fextname, '> at', file, verbose = verbose)
+    file
 }
 
 
-#' @importFrom grDevices dev.off
 .ydumpto.data.frame = function(x,
-                               fname,
-                               ext = NULL,
-                               outputdir = OUTPUTROOT,
-                               verbose = TRUE,
+                               fpath,
+                               ffname,
+                               fextname,
+                               verbose=TRUE,
                                ...) {
     # if (row.names %>% is.null) row.names= TRUE
-    if (is.null(ext))
-        ext = 'dfx'
-    file = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    argv =  yget_args(..., .f = utils::write.table)
-    if (argv$quote |> is.null())
+
+    if (fextname=='')
+        fextname = 'dfx'
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+
+    argv = yget_args(..., .f = utils::write.table)
+    if (argv$quote %>% is.null())
         argv$quote = FALSE
-    if (argv$sep |> is.null())
+    if (argv$sep %>% is.null())
         argv$sep = '\t'
+    if (argv$row.names %>% is.null())
+        argv$row.names = yhas_rownames(x)
+
     #     print(c("[argv used]",names(argv)))
     utils::write.table %>% do.call(args = argv)
-    ylog('write 1', ext, 'at', file, verbose = verbose)
+    ylog('write 1 <', fextname, '> at', file, verbose = verbose)
     argv$file
 }
 
-
-#' @importFrom grDevices dev.off
-.ydumpto.ggplot = function(x,
-                           fname,
-                           ext = NULL,
-                           outputdir = OUTPUTROOT,
-                           verbose = TRUE,
+.ydumpto.matrix = function(x,
+                           fpath,
+                           ffname,
+                           fextname,
+                           verbose=TRUE,
                            ...) {
-    if (is.null(ext))
-        ext = 'pdf'
-    filename = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    if (ext %in% c('png', 'svg')) {
-        dev = get(ext, .GlobalEnv)
-    } else if (ext == 'pdf') {
-        dev = get('grDevices::cairo_pdf', .GlobalEnv)
+    if (is.null(fextname))
+        fextname = 'dfx'
+    file  = yfile_path(outputdir, paste(fname, fextname, sep = '.'))
+
+    argv = yget_args(..., .f = utils::write.table)
+    if (argv$row.names %>% is.null())
+        argv$row.names = !(x %>% rownames %>% is.null)
+    if (argv$quote %>% is.null())
+        argv$quote = FALSE
+    if (argv$sep %>% is.null())
+        argv$sep = '\t'
+
+    utils::write.table %>% do.call(args = argv)
+    ylog('write 1 <', fextname, '> at', file, verbose = verbose)
+    argv$file
+}
+
+.ydumpto.gg = function(x,
+                           fpath,
+                           ffname,
+                           fextname,
+                           verbose=TRUE,
+                           ...) {
+    if (fextname=='')
+        fextname = 'pdf'
+    # used by pdf
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by cairo_pdf, png, svg
+    filename = file
+
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
     }
-    argv = yget_args(..., .filter = dev)
+
+    argv = yget_args(..., .f = dev)
+    if (argv$width %>% is.null)
+        argv$width = get("WIDTH",envir = .GlobalEnv)
+    if (argv$height %>% is.null)
+        argv$height = get("HEIGHT",envir = .GlobalEnv)
+
     tryCatch({
-        dev |> do.call(argv)
+        dev %>% do.call(argv)
         print(x)
     }, finally = {
         dev.off()
     })
-    ylog('write 1', ext, 'at', filename, verbose = verbose)
+    ylog('write 1 <', fextname,'> in [',argv$width,',',
+         argv$height, '] inches at', filename, verbose = verbose)
+    argv[[1]]
 }
 
+.ydumpto.Heatmap = function(x,
+                            fpath,
+                            ffname,
+                            fextname,
+                            verbose=TRUE,
+                            ...){
+    if (is.null(fextname))
+        fextname = 'pdf'
 
-#' @importFrom grDevices dev.off
-.ydumpto.pheatmap = function(x,
-                             fname,
-                             ext = NULL,
-                             outputdir = OUTPUTROOT,
-                             verbose = TRUE,
-                             ...) {
-    if (is.null(ext))
-        ext = 'pdf'
-    #     filename = yfile_path(outputdir,paste(fname,ext,sep='.'))
-    filename = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    if (ext %in% c('png', 'svg')) {
-        dev = get(ext, .GlobalEnv)
-    } else if (ext == 'pdf') {
-        dev = get('grDevices::cairo_pdf', .GlobalEnv)
+    # used by pdf
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by cairo_pdf, png, svg
+    filename = file
+
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
     }
-    argv = yget_args(..., .filter = dev)
+
+    argv = yget_args(..., .f = dev)
+    if (argv$width %>% is.null)
+        argv$width = get("WIDTH",envir = .GlobalEnv)
+    if (argv$height %>% is.null)
+        argv$height = get("HEIGHT",envir = .GlobalEnv)
+
     tryCatch({
-        dev |> do.call(argv)
+        dev %>% do.call(argv)
+        ComplexHeatmap::draw(x,...)
+    }, finally = {
+        dev.off()
+    })
+    ylog('write 1 <', fextname,'> in [',argv$width,',',
+         argv$height, '] inches at', filename, verbose = verbose)
+
+}
+
+.ydumpto.pheatmap = function(x,
+                             fpath,
+                             ffname,
+                             fextname,
+                             verbose=TRUE,
+                             ...) {
+    if (is.null(fextname))
+        fextname = 'pdf'
+
+    # used by pdf
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by cairo_pdf, png, svg
+    filename = file
+
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
+    }
+
+    argv = yget_args(..., .f = dev)
+    if (argv$width %>% is.null)
+        argv$width = get("WIDTH",envir = .GlobalEnv)
+    if (argv$height %>% is.null)
+        argv$height = get("HEIGHT",envir = .GlobalEnv)
+
+    tryCatch({
+        dev %>% do.call(argv)
         grid::grid.newpage()
         grid::grid.draw(x$gtable)
     }, finally = {
         dev.off()
     })
-    ylog('write 1', ext, 'at', filename, verbose = verbose)
+    ylog('write 1 <', fextname,'> in [',argv$width,',',
+         argv$height, '] inches at', filename, verbose = verbose)
+    argv[[1]]
 }
 
-.ydumpto.matrix = function(x,
-                           fname,
-                           ext = NULL,
-                           outputdir = OUTPUTROOT,
-                           verbose = TRUE,
-                           ...) {
-    # if (row.names %>% is.null) row.names= TRUE
-    if (is.null(ext))
-        ext = 'dfx'
-    file  = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    argv = yget_args(..., .filter = utils::write.table)
-    path = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    if (argv$row.names %>% is.null())
-        argv$row.names = TRUE
-    if (argv$quote |> is.null())
-        argv$quote = FALSE
-    if (argv$sep |> is.null())
-        argv$sep = '\t'
-    ylog('[argv used]', names(argv), ',', .addtime = F)
-    utils::write.table |> do.call(args = argv)
-    ylog('write 1', ext, 'at', path, verbose = verbose)
+.ydumpto.PlainTXT = function(x,
+                             fpath,
+                             ffname,
+                             fextname,
+                             verbose=TRUE,
+                             ...){
+    if (is.null(fextname))
+        fextname = 'txt'
+
+    path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    tryCatch(expr = {
+        fileConn <- file(path)
+        writeLines(x, fileConn)
+    },finally = {
+        close(fileConn)
+    })
+    ylog('write 1 plain text <',fextname, '> at', path, verbose = verbose)
 }
 
 .ydumpto.json = function(x,
-                         fname,
-                         ext = NULL,
-                         outputdir = OUTPUTROOT,
-                         verbose = TRUE,
+                         fpath,
+                         ffname,
+                         fextname,
+                         verbose=TRUE,
                          ...) {
-    if (is.null(ext))
-        ext = 'json'
-    path = yfile_path(outputdir, paste(fname, ext, sep = '.'))
+    if (is.null(fextname))
+        fextname = 'json'
+    path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
     argv = yget_args(..., .f = jsonlite::write_json)
-    if (argv$auto_unbox |> is.null())
+    if (argv$auto_unbox %>% is.null())
         argv$auto_unbox = TRUE
-    ylog('[argv used]', names(argv), ',', .addtime = F)
     if (typeof(x) == 'character') {
         fileConn <- file(path)
         writeLines(x, fileConn)
         close(fileConn)
     } else{
-        jsonlite::write_json |> do.call(args = argv)
+        jsonlite::write_json %>% do.call(args = argv)
     }
-    ylog('write 1 json at', path, verbose = verbose)
+    ylog('write 1 <json> at', path, verbose = verbose)
 }
 
-# args is the list of args used by the plotting function
-.ydumpto.function = function(x, args, verbose, ext, outputdir, fname, ...) {
-    " return plot_func and its args used for plotting named 'plot_func' & 'plot_args' "
+
+.ydumpto.RDS = function(x,
+                        fpath,
+                        ffname,
+                        fextname,
+                        verbose=TRUE,
+                        ...){
+    if (is.null(fextname))
+        fextname = 'RDS'
+
+    path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+
+    saveRDS(x,path)
+
+    ylog('write 1 <',fextname, '> at', path, verbose = verbose)
+}
+
+#
+#' Title
+#'
+#' return plot_func and its args used for plotting named 'plot_func' & 'plot_args'
+#' args is the list of args used by the plotting function
+#'
+#' @param x
+#' @param fpath
+#' @param ffname
+#' @param fextname
+#' @param verbose
+#' @param ...
+#'
+#' @return
+#' @export
+#'
+#' @examples
+.ydumpto.function = function(x,
+                             args,
+                             fpath,
+                             ffname,
+                             fextname,
+                             verbose=TRUE,
+                             ...) {
+    "  "
     argv = yget_args(...)
     if ('args' %in% (argv %>% names)) {
         print('⚠ run .ydumpto.function with no @args argument supplied')
@@ -885,26 +1016,32 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     if (verbose == TRUE)
         ylog('you are dumping a function, assuming its a plotting one',
              .addtime = F)
-    if (is.null(ext)) {
-        ext = 'pdf'
-    } else if (nchar(as.character(ext)) > 20) {
+    if (is.null(fextname)) {
+        fextname = 'pdf'
+
+    } else if (nchar(as.character(fextname)) > 20) {
         print(
             paste0(
-                'There maybe somthing wrong with <ext>, it is to long: "',
-                str_sub(as.character(ext), 1, 20),
+                'There maybe somthing wrong with <fextname>, it is to long: "',
+                str_sub(as.character(fextname), 1, 20),
                 '..." total ',
-                nchar(as.character(ext)),
+                nchar(as.character(fextname)),
                 ' chars'
             )
         )
         stop('!')
     }
-    filename = yfile_path(outputdir, paste(fname, ext, sep = '.'))
-    argv$filename = filename
-    if (ext %in% c('png', 'svg')) {
-        dev = get(ext, .GlobalEnv)
-    } else if (ext == 'pdf') {
-        dev = get('grDevices::cairo_pdf', .GlobalEnv)
+    filename = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+        argv$filename = filename
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
+        if (PDF_DEVICE=='cairo_pdf')
+            argv$filename = filename
+        else if (PDF_DEVICE =='pdf')
+            argv$file = filename
     }
     tryCatch({
         argv1 = argv %>% ygetlast(formals(dev) %>% names)
@@ -915,27 +1052,12 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     }, finally = {
         dev.off()
     })
-    ylog('write 1', ext, 'at', filename, verbose = verbose)
-    list(plot_func = x, plot_args = args)
+    ylog('write 1', fextname, 'at', filename, verbose = verbose)
+    filename
 }
 
 
 
-#' check string is a valid R var/obj name
-#'
-#' check string is a valid R var/obj name, return TRUE if string is valid False if it is not
-#'
-#' @param string
-#'
-#' @return TRUE, if string is a valid else FALSE
-#' @export
-#'
-#' @examples
-#' yis_valid_unreserved('.jjj') # returns TRUE
-#' yis_valid_unreserved('_jjj') # returns FALSE
-yis_valid_unreserved <- function(string) {
-    make.names(string) == string
-}
 
 
 

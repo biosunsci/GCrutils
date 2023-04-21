@@ -4,10 +4,10 @@
 \alias{ysplit_file_name}
 \title{Split a file name string into fname, extName}
 \usage{
-ysplit_file_name(str, ext = NULL, mode = "auto", ...)
+ysplit_file_name(str, fextname = NULL, mode = "auto", ...)
 }
 \arguments{
-\item{ext}{set extention name of}
+\item{fextname}{set extention name of}
 
 \item{mode}{in ['auto','keep','add','replace'] default 'auto', behave, see example}
 
