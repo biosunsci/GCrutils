@@ -835,6 +835,8 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     file  = yfile_path(outputdir, paste(fname, ext, sep = '.'))
     argv = yget_args(..., .filter = utils::write.table)
     path = yfile_path(outputdir, paste(fname, ext, sep = '.'))
+    if (argv$row.names %>% is.null())
+        argv$row.names = TRUE
     if (argv$quote |> is.null())
         argv$quote = FALSE
     if (argv$sep |> is.null())

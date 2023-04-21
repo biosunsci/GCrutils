@@ -34,9 +34,10 @@ Imports:
     ggplotify(>= 0.1.0),
     MutationalPatterns (>= 3.4.1),
     clusterProfiler,
-    survminer,
-    survival,
-    VennDiagram(>= 1.7.3)
+    survminer(>= 0.4.9),
+    survival)(>= 3.5),
+    VennDiagram(>= 1.7.3),
+    fs(>= 1.6.1)
 Suggests: 
     testthat (>= 3.0.0),
     BSgenome.Hsapiens.UCSC.hg19
