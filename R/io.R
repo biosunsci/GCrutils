@@ -2,11 +2,13 @@ tryCatch(
     expr = {
         cairo_pdf('data/test.pdf',5,5)
         plot(c(1,2,3),c(4,5,6))
-        PDF_DEVICE <<- PDF_DEVICE
+        PDF_DEVICE <<- 'cairo_pdf'
+        # assign("PDF_DEVICE", 'cairo_pdf',envir = .GlobalEnv)
         dev.off()
     },
     warning = function(w){
         PDF_DEVICE <<- 'pdf'
+        # assign("PDF_DEVICE", 'pdf',envir = .GlobalEnv)
     },finally = {
         tryCatch({ dev.off() }, error = function(e) {})
         if (file.exists("data/test.pdf"))
