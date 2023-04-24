@@ -14,25 +14,32 @@ test_that("matrix, data.frame, ggplot, Heatmap ydumpto works", {
     expect_equal(OUTPUTROOT,'tmp/')
 
 
-    expect_true(is.data.frame(mtcars))
-    mtcars %>% ydumpto('df',outputdir = OUTPUTROOT)
-    expect_true(file.exists("tmp/df.dfx"))
+
 
     expect_true(is.ggplot(gg))
     gg %>% ydumpto('gg',outputdir = OUTPUTROOT)
     expect_true(file.exists("tmp/gg.pdf"))
 
-    # expect .dfx with rownames
-    expect_true(is.matrix(mat))
-    mat %>% ydumpto('matrix',outputdir = OUTPUTROOT)
-    expect_true(file.exists("tmp/matrix.dfx"))
-
     expect_true('Heatmap' %in% class(hm))
     hm %>% ydumpto('hm',outputdir = OUTPUTROOT)
     expect_true(file.exists("tmp/hm.pdf"))
 
+    expect_true(is.data.frame(mtcars))
+    mtcars %>% ydumpto('df.dfx',outputdir = OUTPUTROOT)
+    expect_true(file.exists("tmp/df.dfx"))
+
+    # expect .dfx with rownames
+    expect_true(is.matrix(mat))
+    mat %>% ydumpto('matrix.dfx',outputdir = OUTPUTROOT)
+    expect_true(file.exists("tmp/matrix.dfx"))
+
     # expect .dfx without rownames
     iris %>% ydumpto('iris',outputdir = OUTPUTROOT)
     expect_true(file.exists("tmp/iris.dfx"))
+
+    # expect .dfx with rownames
+    expect_true(is.matrix(mat))
+    mat %>% ydumpto('matrix.txt',outputdir = OUTPUTROOT)
+    expect_true(file.exists("tmp/matrix.txt"))
 
 })

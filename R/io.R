@@ -13,6 +13,7 @@ tryCatch(
         tryCatch({ dev.off() }, error = function(e) {})
         if (file.exists("data/test.pdf"))
             file.remove('data/test.pdf')
+        message('PDF_DEVICE is: ',PDF_DEVICE)
     }
 )
 
@@ -423,7 +424,7 @@ ydumpto = function(x,
         stop('fname is NULL')
     if (is.null(x))
         stop('x is NULL')
-    if (tibble::is.tibble(x)){
+    if (tibble::is_tibble(x)){
         x = as.data.frame(x)
     }
     # fpath is the final outputdir to use
@@ -539,7 +540,6 @@ yget_args = function (..., .f = NULL) {
 #' @return character vector if get_default_values==FALSE NOT recommended to use, cause can not determine the exact
 #'   behavior at current at 2023-04-19 seems to get the list with names are the arg names and values are the default
 #'   values at the run time
-#' @export
 #'
 #' @examples
 #' \dontrun{
@@ -596,7 +596,6 @@ yfunc_args <- function(func=NULL, get_default_values = FALSE) {
 #' @param ...
 #'
 #' @return character of length 2
-#' @export
 #'
 #' @example
 #' ysplit_file_name('a.b.c.txt',fextname=NULL,mode='auto') # c('a.b.c', 'txt')
@@ -671,7 +670,6 @@ ysplit_file_name = function(str, fextname = NULL, mode = 'auto', ...) {
 #' @param path
 #'
 #' @return
-#' @export
 #'
 ysplit_path = function(path) {
     path.list = str_split(path, pattern = '/+')[[1]]
@@ -741,7 +739,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                          verbose=TRUE,
                          ...) {
     # if (row.names %>% is.null) row.names= FALSE
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'pdf'
     file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
 
@@ -770,7 +768,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                                ...) {
     # if (row.names %>% is.null) row.names= TRUE
 
-    if (fextname=='')
+    if (fextname == '')
         fextname = 'dfx'
     file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
 
@@ -794,9 +792,9 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                            fextname,
                            verbose=TRUE,
                            ...) {
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'dfx'
-    file  = yfile_path(outputdir, paste(fname, fextname, sep = '.'))
+    file  = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
 
     argv = yget_args(..., .f = utils::write.table)
     if (argv$row.names %>% is.null())
@@ -817,7 +815,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                            fextname,
                            verbose=TRUE,
                            ...) {
-    if (fextname=='')
+    if (fextname == '')
         fextname = 'pdf'
     # used by pdf
     file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
@@ -853,7 +851,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                             fextname,
                             verbose=TRUE,
                             ...){
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'pdf'
 
     # used by pdf
@@ -890,7 +888,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                              fextname,
                              verbose=TRUE,
                              ...) {
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'pdf'
 
     # used by pdf
@@ -928,7 +926,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                              fextname,
                              verbose=TRUE,
                              ...){
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'txt'
 
     path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
@@ -947,7 +945,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                          fextname,
                          verbose=TRUE,
                          ...) {
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'json'
     path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
     argv = yget_args(..., .f = jsonlite::write_json)
@@ -970,7 +968,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                         fextname,
                         verbose=TRUE,
                         ...){
-    if (is.null(fextname))
+    if (fextname == '')
         fextname = 'RDS'
 
     path = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
@@ -1018,7 +1016,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     if (verbose == TRUE)
         ylog('you are dumping a function, assuming its a plotting one',
              .addtime = F)
-    if (is.null(fextname)) {
+    if (fextname=='') {
         fextname = 'pdf'
 
     } else if (nchar(as.character(fextname)) > 20) {
