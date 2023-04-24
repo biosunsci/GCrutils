@@ -684,7 +684,7 @@ ydo_ssGSEA = function(expr_matrix,
     res = list()
     if (!is.null(ref.gmt)) {
         if (is.character(ref.gmt)) {
-            ref_df = yload_list_gmt(gmt_txt_file_path = ref.gmt)
+            ref_df = yload_list_gmt(ref.gmt)
         }
         if (is.null(ref.gmt.name)) {
             ref.gmt.name = 1

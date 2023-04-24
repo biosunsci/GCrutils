@@ -44,3 +44,5 @@ Suggests:
     BSgenome.Hsapiens.UCSC.hg19
 Config/testthat/edition: 3
 RoxygenNote: 7.2.3
+ExtraData: 
+    extdata
