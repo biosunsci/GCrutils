@@ -1,24 +1,3 @@
-#' Title
-#'
-#' @param x
-#' @param func
-#'
-#' @return
-#' @export
-#'
-#' @examples
-yloop = function(x,func){
-    l = length(formals(func))
-    if (l==3) for (i in 1:length(x)){
-        func(x[[i]],names(x[i]),i)
-    }else if (l==2)  for (i in 1:length(x)){
-        func(x[[i]],names(x[i]))
-    }else if (l==1)  for (i in 1:length(x)){
-        func(x[[i]])
-    }
-}
-
-
 
 
 
@@ -187,7 +166,7 @@ yget_grps = function(glx,col=NULL,order=NULL){
 #' @examples
 is.color = function(x){
     tryCatch(expr = {
-        grDevices::col2rgb('abc')
+        grDevices::col2rgb(x)
         return(TRUE)
     }
     ,error = function(e){

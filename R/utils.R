@@ -31,7 +31,7 @@ ylog = function(...,verbose=TRUE, .addtime=TRUE, .dev=2){
             msg = list(...) %>% unlist %>% as.character %>% str_flatten(collapse = ' ')
         }
         print(msg)
-        write(msg,.dev)
+        # message(msg)
     }
 }
 
@@ -116,6 +116,30 @@ ypush = function(iter, ..., .expand=TRUE,.as.whole=FALSE) {
             return(iter)
         }
         return(iter)
+    }
+}
+
+
+#' apply func over a list x
+#'
+#' @param x the list to be itered
+#' @param func apply the func over x items, func could be 1,2,3 parameters
+#' 1: func(value)
+#' 2: func(value,key)
+#' 3: func(value,key,index)
+#'
+#' @return None
+#' @export
+#'
+#' @examples
+yloop = function(x,func){
+    l = length(formals(func))
+    if (l==3) for (i in 1:length(x)){
+        func(x[[i]],names(x[i]),i)
+    }else if (l==2)  for (i in 1:length(x)){
+        func(x[[i]],names(x[i]))
+    }else if (l==1)  for (i in 1:length(x)){
+        func(x[[i]])
     }
 }
 
@@ -388,7 +412,7 @@ yscale_rows = function(x){
 #' @export
 #'
 #' @examples
-yget_subset_maf = function(maf,glx,col = NULL,id_col='Tumor_Sample_Barcode',.container=NULL,.assignGlobal=TRUE,...){
+ygen_subMafs_ = function(maf,glx,col = NULL,id_col='Tumor_Sample_Barcode',.container=NULL,.assignGlobal=TRUE,...){
     if (!is.null(.container)){
         .assignGlobal = FALSE
         stopifnot(is.list(.container))

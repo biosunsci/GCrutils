@@ -42,6 +42,13 @@ test_that("matrix, data.frame, ggplot, Heatmap ydumpto works", {
     mat %>% ydumpto('matrix.txt',outputdir = OUTPUTROOT)
     expect_true(file.exists("tmp/matrix.txt"))
 
+    file.remove('tmp/gg.pdf')
+    file.remove('tmp/hm.pdf')
+    file.remove('tmp/df.dfx')
+    file.remove('tmp/matrix.dfx')
+    file.remove('tmp/iris.dfx')
+    file.remove('tmp/matrix.txt')
+
     lis = c('hm','kegg','im','im_jnj')
     for (i in lis){
         message('gmt',i)

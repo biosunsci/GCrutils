@@ -7,6 +7,8 @@
 show_anno_col(col_anno, ...)
 }
 \arguments{
+\item{col_anno}{}
+
 \item{...}{allowed value are c(labels = FALSE,borders = FALSE,cex_label = ?)}
 }
 \description{

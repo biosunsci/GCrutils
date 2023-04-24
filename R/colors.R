@@ -193,7 +193,12 @@ ygen_anno_color = function(df, palette=NULL, colors=NULL, cols = c('Clin_classif
 
 #' @title show_anno_col
 #' @description show colors for COL_ANNO
+#'
 #' @param ... allowed value are c(labels = FALSE,borders = FALSE,cex_label = ?)
+#' @param col_anno
+#'
+#' @export
+#'
 show_anno_col = function(col_anno,...){
     res = c()
     l = col_anno %>% sapply(length) %>% max
