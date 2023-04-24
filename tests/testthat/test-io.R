@@ -42,4 +42,12 @@ test_that("matrix, data.frame, ggplot, Heatmap ydumpto works", {
     mat %>% ydumpto('matrix.txt',outputdir = OUTPUTROOT)
     expect_true(file.exists("tmp/matrix.txt"))
 
+    lis = c('hm','kegg','im','im_jnj')
+    for (i in lis){
+        message('gmt',i)
+        li = yload_gmt(i)
+        message('list gmt',i)
+        li = yload_list_gmt(i)
+    }
+    expect_true(TRUE)
 })

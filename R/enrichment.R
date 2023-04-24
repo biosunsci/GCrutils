@@ -1,8 +1,8 @@
+#  ----------------- Private Global VAR ---------------
 SSGSEA_BASE_REF_DIR = './extdata/'
 COMMON_GMT_TAGS = c('hm', 'kegg', 'im', 'im_jnj')
 
-
-
+# ---------------- Enrich Func -----------------------------
 #' GSEA analysis using different expression results
 #'
 #' @param diff a data.frame which is a output df of DESeq2 different expr analysis output, with columns: symbol, log2FC, pvalue, padj, stat
@@ -554,9 +554,9 @@ ydo_GO = function(sig_genes,
         npg = ggsci_col_scheme
     }
     if (is.null(all_genes)) {
-        all_genes = readRDS('/GCI/jup/A_TSF/dev/ref/all_genes_symbol.RDS')
+        all_genes = readRDS('./extdata/all_genes_symbol.RDS')
         print(
-            'all_genes is NULL, Read 19039 gene symbols from /GCI/jup/A_TSF/dev/ref/all_genes_symbol.RDS -> all_genes'
+            'all_genes is NULL, Read 19039 gene symbols from extdata/all_genes_symbol.RDS -> all_genes'
         )
     }
     if (!is.character(sig_genes)) {
@@ -756,16 +756,19 @@ ydo_ssGSEA = function(expr_matrix,
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#'\dontrun{
 #' gmt = yload_gmt('hm')
 #' }
 #'
 yload_gmt = function(key = NULL,
                      base_ref_dir = NULL) {
     if (key %in% COMMON_GMT_TAGS) {
-        gmt = readRDS(file.path('extdata/', paste0(key, '.symbol.df.RDS')))
+        f = file.path('extdata/', paste0(key, '.symbol.df.RDS'))
+        f = system.file(f, package = 'GCrutils')
+        gmt = readRDS(f)
     } else{
-        if (is.null(base_ref_dir) || is.null(base_ref_dir)) {
+        print('else')
+        if (is.null(base_ref_dir)) {
             base_ref_dir = SSGSEA_BASE_REF_DIR
         }
         path = file.path(base_ref_dir, key)
@@ -841,12 +844,18 @@ yload_gmtfile2list <- function(gmtfile) {
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' gmt.list = yload_list_gmt('hm')
+#' }
 yload_list_gmt = function(key = NULL,
                           base_ref_dir = NULL) {
     if (key %in% COMMON_GMT_TAGS) {
-        gmt_list = readRDS(file.path('extdata/', paste0(key, '.symol.list.RDS')))
+        f = file.path('extdata/', paste0(key, '.symbol.list.RDS'))
+        f = system.file(f, package = 'GCrutils')
+        gmt_list = readRDS(f)
+
     } else{
-        if (is.null(base_ref_dir) || is.null(base_ref_dir)) {
+        if (is.null(base_ref_dir)){
             base_ref_dir = SSGSEA_BASE_REF_DIR
         }
         path = file.path(base_ref_dir, key)

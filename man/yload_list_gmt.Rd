@@ -27,6 +27,10 @@ list with names is term, and value is corresponding genes, like
 \description{
 see docs of yload_list_gmt, yload_gmt
 }
+\examples{
+gmt.list = yload_list_gmt('hm')
+
+}
 \seealso{
 yload_gmt
 }
