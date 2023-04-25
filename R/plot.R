@@ -142,29 +142,35 @@ yplot_heatmap = function(
         color = heatmap_legend_param$color
         heatmap_legend_param$color = NULL
     }
-    if (color == '-2~2' || color == 'default'){
-        color = circlize::colorRamp2(breaks = c(-2, 0, 2),colors =  c("blue", "white", "red"), space = 'RGB')
-    }else if (str_detect(color,'~')){
-        tryCatch(expr = {
-            x = str_split(color,'~')[[1]] %>% as.numeric
-        },warning = function(w){
-            stop(w)
-        },error=function(e){
-            stop(e)
-        }
-        )
-        if (length(x)<=3){
-            if (x[[1]] * x[[2]] < 0){
-                x = c(x[[1]],0,x[[2]])
-            }
-            color = circlize::colorRamp2(breaks = x, colors =  c("blue", "white", "red")[1:length(x)], space = 'RGB')
-        }else{
-            color = circlize::colorRamp2(breaks = x, colors = rainbow(length(x)), space = 'RGB')
-        }
-    }else{
-        # pass
-    }
 
+    if (is.character(color)){
+        if (color == '-2~2' || color == 'default'){
+            color = circlize::colorRamp2(breaks = c(-2, 0, 2),colors =  c("blue", "white", "red"), space = 'RGB')
+        }else if (str_detect(color,'~')){
+            tryCatch(expr = {
+                x = str_split(color,'~')[[1]] %>% as.numeric
+            },warning = function(w){
+                stop(w)
+            },error=function(e){
+                stop(e)
+            }
+            )
+            if (length(x)<=3){
+                if (x[[1]] * x[[2]] < 0){
+                    x = c(x[[1]],0,x[[2]])
+                }
+                color = circlize::colorRamp2(breaks = x, colors =  c("blue", "white", "red")[1:length(x)], space = 'RGB')
+            }else{
+                color = circlize::colorRamp2(breaks = x, colors = rainbow(length(x)), space = 'RGB')
+            }
+        }else{
+            # pass
+        }
+    }else if (is.function(color)){
+
+    }else{
+        stop('color must be function or a color vector')
+    }
     hm = ComplexHeatmap::Heatmap(mat
                                  ,col = color
                                  ,name = name
@@ -293,7 +299,7 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, group_col = NA,
         perplexity = floor((nrow(mat) - 1)/3)
     }
     stopifnot(!is.null(colData) && !is.null(mat))
-    res = Rtsne(mat, perplexity = perplexity, dims = dims, ...)
+    res = Rtsne::Rtsne(mat, perplexity = perplexity, dims = dims, ...)
     df = res$Y %>% data.frame(row.names = pids)
     colData2 = colData[pids, , drop = FALSE]
     df = cbind(df, colData2)
@@ -325,9 +331,9 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, group_col = NA,
 #' @param colData
 #' @param color_col
 #' @param add_label
-#' @param tag_fontsize
-#' @param max.overlaps
-#' @param alpha
+#' @param tag_fontsize pass to `size` in geom_label_repel
+#' @param max.overlaps pass to ggrepel
+#' @param alpha pass to geom_point
 #' @param ...
 #'
 #' @return
@@ -341,15 +347,14 @@ yplot_pca = function (normd, colData, color_col = "Group", add_label = FALSE,
     mat = sig_table[, mask]
     if (ncol(mat) < ncol(sig_table))
         ylog("containing ", sum(!mask), " features with sd==0, removed")
-    pca <- prcomp(mat, center = TRUE, scale. = TRUE)
+    pca <- stats::prcomp(mat, center = TRUE, scale. = TRUE)
     color_col = sym(color_col)
     data = cbind(pca$x[colData %>% rownames, 1:2], colData) %>%
         rownames_to_column("Tumor_Sample_Barcode")
     gg = data %>% ggplot(aes(PC1, PC2, color = !!color_col, label = Tumor_Sample_Barcode)) +
-        geom_point(size = 3, alpha = 0.7) + ggtitle("PCA")
+        geom_point(size = 3, alpha = alpha) + ggtitle("PCA")
     if (add_label == TRUE) {
-        library(ggrepel)
-        gg = gg + geom_label_repel(size = {
+        gg = gg + ggrepel::geom_label_repel(size = {
             {
                 tag_fontsize
             }

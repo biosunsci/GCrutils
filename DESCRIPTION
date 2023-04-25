@@ -38,7 +38,8 @@ Imports:
     survival (>= 3.5),
     VennDiagram(>= 1.7.3),
     fs (>= 1.6.1),
-    tools
+    tools,
+    ggrepel
 Suggests: 
     testthat (>= 3.0.0),
     BSgenome.Hsapiens.UCSC.hg19

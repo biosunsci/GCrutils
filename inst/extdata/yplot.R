@@ -2,29 +2,6 @@
 
 
 
-#' Title
-#'
-#' @param maf_
-#' @param gl_
-#' @param laml
-#' @param only_12_cols
-#' @param ...
-#'
-#' @return
-#' @export
-#'
-#' @examples
-yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
-    if (is.null(laml) && !is.null(maf_) && !is.null(gl_)) {
-        maf_ = yload_dfx(maf_,...)
-        if (only_12_cols==TRUE) maf_ = maf_[,1:12]
-        gl_ = yload_dfx(gl_,...)
-        laml = read.maf(maf_,clinicalData = gl_)
-    }else if(!is.null(laml)){
-        #pass
-    }else stop('laml,maf_,gl_ all NULL')
-    laml
-}
 
 
 # for repel labeling
@@ -977,7 +954,7 @@ yplot_cosmic <- function(laml=NULL,maf_=NULL,glx_=NULL
     if (only_plot_subgroups){
         res = list()
         for (g in grps){
-            res[[g]]= subsetMaf(laml,clinQuery=paste0('Clin_classification=="',g,'"'))
+            res[[g]]= maftools::subsetMaf(laml,clinQuery=paste0('Clin_classification=="',g,'"'))
             if (export!=FALSE) export=names(res[g])
             plot_cosmic_inner(res[[g]],export=export,flag='CosSig'
                               ,prefix=sig_ver

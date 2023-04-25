@@ -71,7 +71,7 @@ yget_known_ref_cancer_signatures = function(cosmic_ver='v2'){
 #' @export
 #'
 #' @examples
-yget_signatures_related_all = function(laml,cosmic_ver = 'v2',rank=3, nrun=3,single_core=TRUE,...){
+yget_signatures_related_all = function(laml, cosmic_ver = 'v2',rank=3, nrun=3,single_core=TRUE,...){
     "require MutationalPatterns::extract_signatures, yget_known_cancer_signatures, MutationalPatterns::fit_to_signatures"
     # get mut_mat of 96 tri-nucleotide
     laml.tnm = maftools::trinucleotideMatrix(maf = laml
@@ -139,5 +139,6 @@ yget_maftools_signatures = function(laml_or_tnm, rank = NA, cosmic_ver = 'v2', p
                                 cluster_rows = FALSE, column_title = "cosine similarity against validated signatures")
         maftools::plotSignatures(nmfRes = laml.sig, title_size = 1.2, sig_db = sig_db)
     }
-    list(laml.sig,laml.cosm)
+    # concat the two result lists
+    c(laml.sig,laml.cosm)
 }
