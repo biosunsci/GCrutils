@@ -2,7 +2,7 @@
 % Please edit documentation in R/cosmic_signatures.R
 \name{yget_signatures_related_all}
 \alias{yget_signatures_related_all}
-\title{Title}
+\title{extract tnm, signatures and signatures contributions using maf objects}
 \usage{
 yget_signatures_related_all(
   laml,
@@ -14,8 +14,24 @@ yget_signatures_related_all(
 )
 }
 \arguments{
+\item{laml}{Maf type obj, by maftools::read.maf}
+
+\item{cosmic_ver}{{v2:30 classical, v3: SBS signatures}}
+
+\item{rank}{3, numbers of signatures to extract}
+
+\item{nrun}{3, re sample times in extracting signatures}
+
 \item{...}{}
 }
+\value{
+list, of list(mut_mat=mut_mat,extracted_n_signatures_suit=custom_sigs,contribution=fit_res$contribution,tnm=laml.tnm)
+}
 \description{
-Title
+extract tnm, signatures and signatures contributions using maf objects
+}
+\details{
+use maftools::trinucleotideMatrix to get tri-nucleotides mutations
+use MutationalPatterns::extract_signatures to extract maf specific signatures
+use MutationalPatterns::fit_to_signatures to get cosine similaries and contributions
 }
