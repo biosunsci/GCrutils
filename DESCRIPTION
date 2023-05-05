@@ -14,6 +14,7 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 4.1),
+    BSgenome.Hsapiens.UCSC.hg19,
     magrittr (>= 2.0.3),
     dplyr (>= 1.0.10),
     ggplot2 (>= 3.4.1),
@@ -39,10 +40,23 @@ Imports:
     VennDiagram(>= 1.7.3),
     fs (>= 1.6.1),
     tools,
-    ggrepel
+    ggrepel,
+    org.Hs.eg.db
 Suggests: 
     testthat (>= 3.0.0),
-    BSgenome.Hsapiens.UCSC.hg19
+    BSgenome,
+    GenomicRanges,
+    IRanges,
+    knitr,
+    mclust,
+    MultiAssayExperiment,
+    NMF,
+    R.utils,
+    RaggedExperiment,
+    rmarkdown,
+    S4Vectors,
+    pheatmap,
+    curl
 Config/testthat/edition: 3
 RoxygenNote: 7.2.3
 ExtraData: 

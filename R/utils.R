@@ -1,3 +1,18 @@
+#' same as Reduce
+#'
+#' @description same as Reduce except for x,f position exchanged for compilable with pipe op %>%
+#'
+#' @param x
+#' @param f
+#' @param init
+#' @param ...
+#'
+#' @return
+#'
+#' @examples
+reduce = function(x,f,init,...){
+    Reduce(f,x,init,...)
+}
 
 
 #'
@@ -473,13 +488,13 @@ ygen_subMafs_ = function(maf,glx,col = NULL,id_col='Tumor_Sample_Barcode',.conta
 
 #' Title
 #'
-#' @param maf_
-#' @param gl_
-#' @param laml
-#' @param only_12_cols
+#' @param maf_ a MAF style table file name
+#' @param gl_ a group list file name
+#' @param laml a maftools::MAF object
+#' @param only_12_cols only use first 12 columns of read maf_ table (maftools standard input columns numbers)
 #' @param ...
 #'
-#' @return
+#' @return maftools::MAF object
 #' @export
 #'
 #' @examples
@@ -495,3 +510,169 @@ yload_laml_maf = function(maf_=NULL,gl_=NULL,laml=NULL,only_12_cols=TRUE,...){
     laml
 }
 
+#' Load all GC used gene symbols
+#'
+#' @return a character vector
+#' @export
+#'
+#' @examples
+yload_symbols_all_genes_18669 = function(){
+    f = system.file('extdata/all_genes_symbol.RDS',package = 'GCrutils')
+    readRDS(f)
+}
+#' Load GC curated cancer-related gene symbols
+#'
+#' @return a character vector
+#' @export
+#'
+#' @examples
+#' cr = yload_symbols_cancer_related_genes_1190()
+yload_symbols_cancer_related_genes_1190 = function(){
+    f = system.file('extdata/cancer_related_symbols.RDS',package = 'GCrutils')
+    readRDS(f)
+}
+
+
+## Function Description:
+##
+
+#' Check whether a character could be safely convert to numeric
+#'
+#' @description   A function to assess if a vector can be interpreted as numbers. Code copied from
+#'   varhandle::check.numeric.
+#'
+#' @details  This function checks if it is safe to convert the vector to numeric and this conversion
+#'   will not end up in producing NA. In nutshell this function tries to mak sure provided vector
+#'   contains numbers but in a non-numeric class. see example for better understanding. This
+#'   function can be configured to only accept integer numbers (by setting the argument only.integer
+#'   to TRUE).
+#'
+#'   It can also ignore NA values (na.rm argument) and ignore heading/tailing whitespaces
+#'   (ignore.whitespace argument).
+#'
+#'   There is also room to manually define exceptions to be concidered
+#'   as numbers (exceptions argument).
+#'
+#' @param v The character vector or factor vector. (Mandatory)
+#' @param na.rm logical. Should the function ignore NA? Default value is FLASE since NA can be
+#'   converted to numeric. (Optional)
+#' @param only.integer logical. Only check for integers and do not accept floating point. Default
+#'   value is FALSE. (Optional)
+#' @param exceptions A character vector containing the strings that should be considered as valid to
+#'   be converted to numeric. (Optional)
+#' @param ignore.whitespace logical. Ignore leading and tailing whitespace characters before
+#'   assessing if the vector can be converted to numeric. Default value is TRUE. (Optional)
+#'
+#' @return
+#' @export
+#'
+#' @examples
+check.numeric = function(v = NULL, na.rm = FALSE, only.integer = FALSE,
+                          exceptions=c(""), ignore.whitespace = TRUE){
+    #----[ checking the input ]----#
+    {
+        # if the only.integer is NOT a single TRUE or FALSE
+        if (!is.logical(only.integer) | length(only.integer) != 1) {
+            # complain
+            stop("The parameter \"only.integer\" should be either TRUE or FALSE.")
+        }
+
+        # if user has not defined the vector v
+        if (is.null(v)) {
+            # complain
+            stop("The parameter \"v\" is not defined. It can be character vector, numeric vector, factor vector or logical vector.")
+            # if user has defined but the class is NOT character or factor
+        }else if (!inherits(v, c("character", "factor"))) {
+            # if the class is NOT numeric or integer either
+            if (!inherits(v, c("numeric", "integer", "logical"))) {
+                # complain
+                stop("The parameter \"v\" can only be a character vector, numeric vector, factor vector or logical vector.")
+                # if the class is numeric or integer
+            }else{
+                # if user wants to specifically filter out non-integers, there
+                # is a chance that the vector contains some non-integer numbers
+                # so we should turn the vector to character and run the function
+                if(only.integer){
+                    # convert the vector to character
+                    v <- as.character(v)
+                }else{
+                    # since it is already a number
+                    return(rep(x = TRUE, length(v)))
+                }
+            }
+        }
+
+        # if the na.rm is NOT a single TRUE or FALSE
+        if (!is.logical(na.rm) | length(na.rm) != 1) {
+            # complain
+            stop("The parameter \"na.rm\" should be either TRUE or FALSE.")
+        }
+
+
+
+        # if the ignore.whitespace is NOT a single TRUE or FALSE
+        if (!is.logical(ignore.whitespace) | length(ignore.whitespace) != 1) {
+            # complain
+            stop("The parameter \"ignore.whitespace\" should be either TRUE or FALSE.")
+        }
+    }
+
+
+    #----[ pre-processing ]----#
+    {
+        # convert to character if it is vector
+        if (inherits(v, "factor")) {
+            # convert to character
+            v <- as.character(v)
+        }
+
+        # if user wants to ignore NAs
+        if (na.rm) {
+            # if it has some NAs
+            if (any(is.na(v))) {
+                # remove NAs
+                v <- v[-pin.na(v)]
+            }
+        }
+
+        # if user wants to ignore leading or tailing white space
+        if (ignore.whitespace) {
+            # substitute whitespaces in the begining and at the ending of each item in v
+            v <- gsub("^\\s+|\\s+$", "", v)
+        }
+    }
+
+
+    #----[ processing ]----#
+    {
+        # if user wants to only detect integers
+        if (only.integer) {
+            regexp_pattern <- "(^(-|\\+)?\\d+$)|(^(-|\\+)?(\\d*)e(-|\\+)?(\\d+)$)"
+            # if user wants to detect all numbers
+        }else{
+            #regexp_pattern <- "^(-|\\+)?\\d+(\\.?\\d+)?$"
+            regexp_pattern <- "(^(-|\\+)?((\\.?\\d+)|(\\d+\\.\\d+)|(\\d+\\.?))$)|(^(-|\\+)?((\\.?\\d+)|(\\d+\\.\\d+)|(\\d+\\.?))e(-|\\+)?(\\d+)$)"
+        }
+
+        # perform the regexp
+        output <- grepl(pattern = regexp_pattern, x = v)
+
+        # check for existance of exceptions
+        exception_index <- is.element(v, exceptions)
+        # if there are is exception detected
+        if (any(exception_index)) {
+            # turn their output value to TRUE
+            output[exception_index] <- TRUE
+        }
+
+        # if user wants to keep NA
+        if (!na.rm) {
+            # NAs are marked as FALSE by grepl and we replace it with TRUE instead
+            output[is.na(v)] <- TRUE
+        }
+
+
+        # return the result
+        return(output)
+    }
+}

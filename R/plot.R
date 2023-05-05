@@ -272,6 +272,33 @@ yplot_volcano_using_de = function(diff_expr, value_var = 'padj', threshold=c(-2,
     list(gg=g,de=de)
 }
 
+
+#' guess group column name in the data.frame
+#'
+#' @param df
+#'
+#' @return
+#' @export
+#'
+#' @examples
+yinfer_group_col = function(df,raiseError=TRUE){
+    col = colnames(df)
+    if (is.na(group_col)) {
+        if ("Group" %in% col)
+            group_col = "Group"
+        else if ("Clin_classification" %in% col)
+            group_col = "Clin_classification"
+        else if ("g" %in% col)
+            group_col = "g"
+        else {
+            if (raiseError){
+                stop("can not determine group_col in df, stop")
+            }else
+                return(NULL)
+        }
+    }
+    group_col
+}
 #' t-SNE analysis for mat
 #'
 #' @param normd data.fram or matrix, only columns will be preserved, rows will be ruduced in dimensions
@@ -286,7 +313,8 @@ yplot_volcano_using_de = function(diff_expr, value_var = 'padj', threshold=c(-2,
 #' @export
 #'
 #' @examples
-yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, group_col = NA,
+yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, color_col = NULL,
+                       add_label = FALSE, add_polygon=FALSE,
                        perplexity = NA, dims = 2, ...) {
     if (is.null(mat)) {
         mat = t(normd)
@@ -298,28 +326,32 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, group_col = NA,
     if (is.na(perplexity)) {
         perplexity = floor((nrow(mat) - 1)/3)
     }
+
     stopifnot(!is.null(colData) && !is.null(mat))
     res = Rtsne::Rtsne(mat, perplexity = perplexity, dims = dims, ...)
     df = res$Y %>% data.frame(row.names = pids)
     colData2 = colData[pids, , drop = FALSE]
     df = cbind(df, colData2)
-    res$df = df
-    col = colnames(colData)
-    if (is.na(group_col)) {
-        if ("Group" %in% col)
-            group_col = "Group"
-        else if ("Clin_classification" %in% col)
-            group_col = "Clin_classification"
-        else if ("g" %in% col)
-            group_col = "g"
-        else {
+    res$data = df
+
+    if (is.null(color_col)){
+        group_col = yinfer_group_col(colData,raiseError = FALSE)
+        if (is.null(group_col)){
             print("can not determine group_col in colData, stop plotting")
             return(res)
         }
+        color_col = sym(group_col)
+    }else{
+        color_col = sym(color_col)
     }
-    group_col = sym(group_col)
-    gg = df %>% ggplot(aes(x = X1, y = X2, color = !!group_col)) +
+    gg = df %>% ggplot(aes(x = X1, y = X2, color = !!color_col)) +
         geom_point(size = 3, alpha = 0.7) + ggtitle("t-SNE")
+    if (add_polygon){
+        gg = gg + stat_ellipse(aes(fill=!!color_col), show.legend = FALSE,
+                     geom = "polygon",
+                     alpha=0.1,
+                     lwd = 0.5)
+    }
     res$gg = gg
     res
 }
@@ -336,11 +368,11 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, group_col = NA,
 #' @param alpha pass to geom_point
 #' @param ...
 #'
-#' @return
+#' @return list(gg = gg, pca = pca, data = data)
 #' @export
 #'
 #' @examples
-yplot_pca = function (normd, colData, color_col = "Group", add_label = FALSE,
+yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_polygon=FALSE,
                       tag_fontsize = 6, max.overlaps = Inf, alpha = 0.6, ...) {
     sig_table = normd %>% t
     mask = (sig_table %>% apply(sd, MARGIN = 2)) > 0
@@ -348,9 +380,21 @@ yplot_pca = function (normd, colData, color_col = "Group", add_label = FALSE,
     if (ncol(mat) < ncol(sig_table))
         ylog("containing ", sum(!mask), " features with sd==0, removed")
     pca <- stats::prcomp(mat, center = TRUE, scale. = TRUE)
-    color_col = sym(color_col)
+
     data = cbind(pca$x[colData %>% rownames, 1:2], colData) %>%
         rownames_to_column("Tumor_Sample_Barcode")
+
+    res = list(gg = NULL, pca = pca, data = data)
+    if (is.null(color_col)){
+        group_col = yinfer_group_col(colData,raiseError = FALSE)
+        if (is.null(group_col)){
+            print("can not determine group_col in colData, stop plotting")
+            return(res)
+        }
+        color_col = sym(group_col)
+    }else
+        color_col = sym(color_col)
+
     gg = data %>% ggplot(aes(PC1, PC2, color = !!color_col, label = Tumor_Sample_Barcode)) +
         geom_point(size = 3, alpha = alpha) + ggtitle("PCA")
     if (add_label == TRUE) {
@@ -360,7 +404,14 @@ yplot_pca = function (normd, colData, color_col = "Group", add_label = FALSE,
             }
         }, alpha = alpha, max.overlaps = max.overlaps)
     }
-    list(gg = gg, pca = pca, data = data)
+    if (add_polygon){
+        gg = gg + stat_ellipse(aes(fill=!!color_col), show.legend = FALSE,
+                               geom = "polygon",
+                               alpha=0.1,
+                               lwd = 0.5)
+    }
+    res$gg = gg
+    return(res)
 }
 
 #' Plot venn diagram for 2~5 sets
@@ -377,7 +428,7 @@ yplot_venns = function(...){
     stopifnot(x <= 5&& x >=1)
 
     argv = list()
-    DICT = alist(VennDiagram::draw.single.venn, VennDiagram::draw.pairwise.venn, VennDiagram::draw.triple.venn,
+    DICT = list(VennDiagram::draw.single.venn, VennDiagram::draw.pairwise.venn, VennDiagram::draw.triple.venn,
                 VennDiagram::draw.quad.venn, VennDiagram::draw.quintuple.venn)
     plot_func = DICT[[x]]
     for (l in 1:length(sets)) {
