@@ -7,8 +7,9 @@
 yplot_pca(
   normd,
   colData,
-  color_col = "Group",
+  color_col = NULL,
   add_label = FALSE,
+  add_polygon = FALSE,
   tag_fontsize = 6,
   max.overlaps = Inf,
   alpha = 0.6,
@@ -18,7 +19,16 @@ yplot_pca(
 \arguments{
 \item{normd}{data.fram or matrix, only columns will be preserved, rows will be ruduced in dimensions}
 
+\item{tag_fontsize}{pass to `size` in geom_label_repel}
+
+\item{max.overlaps}{pass to ggrepel}
+
+\item{alpha}{pass to geom_point}
+
 \item{...}{}
+}
+\value{
+list(gg = gg, pca = pca, data = data)
 }
 \description{
 PCA analysis for mat

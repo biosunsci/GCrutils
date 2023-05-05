@@ -433,12 +433,19 @@ ydumpto = function(x,
 
     # determine fpath base on input fname and input outputdir
     # if fname start with ../ or ./ or / or ~/ ignore outputdir else use outputdir
-    if (stringr::str_starts(fname,stringr::fixed('./')))
-        fpath = '.'
-    else{
+
+
+
+    if (stringr::str_starts(fname,stringr::fixed('./'))){
         fpath = fs::path_dir(fname)
-        if (!stringr::str_starts(fpath,'\\.\\./|/'))
+    }else{
+        if (basename(dirname(fname)) == ".") {
+            # path contains only one level
             fpath = outputdir
+        } else {
+            # path contains more than one level
+            fpath = fs::path_dir(fname)
+        }
     }
 
     fname = fs::path_file(fname)

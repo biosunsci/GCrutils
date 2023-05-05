@@ -8,7 +8,9 @@ yplot_tsne(
   normd = NULL,
   colData = NULL,
   mat = NULL,
-  group_col = NA,
+  color_col = NULL,
+  add_label = FALSE,
+  add_polygon = FALSE,
   perplexity = NA,
   dims = 2,
   ...

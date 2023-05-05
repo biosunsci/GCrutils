@@ -1,13 +1,76 @@
 # library("survival")
 # library("survminer")
 
+get_threshold = function(data,z_score=3){
+    mean_d = mean(data)
+    std_d = sd(data)
+    list(mean_d - z_score*std_d, mean_d + z_score*std_d)
+}
+#' Title
+#'
+#' @param os_table
+#' @param cover
+#'
+#' @return
+#' @export
+#'
+#' @examples
+os_left_align = function(os_table,cover=12){
+    if (is.numeric(os_table$survivalEvent)){
+        mask1 = os_table$survivalEvent == 1
+    }else if(is.logical(os_table$survivalEvent)){
+        mask1 = os_table$survivalEvent == TRUE
+    }else
+        stop('wrong dtype of survivalEvent, must be int or bool')
+    os_table = os_table[(mask1)|(os_table$survivalMonth >= cover),]
+    os_table
+}
+#' Title
+#'
+#' @param os_table
+#' @param cutoff
+#'
+#' @return
+#' @export
+#'
+#' @examples
+os_right_align = function(os_table,cutoff=NULL){
+    if (is.null(cutoff)){
+        cutoff = get_threshold(os_table.survivalMonth)[[2]]
+    }
+    cutoff = round(cutoff)
+    mask = os_table$survivalMonth > cutoff
+    os_table[mask,'survivalMonth'] = cutoff
+    os_table[mask,'survivalEvent'] = 0
+    os_table$survivalEvent = as.integer(os_table$survivalEvent)
+    os_table
+}
+#' Title
+#'
+#' @param os_table
+#' @param left
+#' @param right
+#'
+#' @return
+#' @export
+#'
+#' @examples
+os_align = function(os_table,left=12,right=60){
+    #     os_table = os_table[['patient_id','survivalEvent','survivalMonth']]
+    if (os_table$survivalEvent %>% is.logical)
+        os_table$survivalEvent = os_table$survivalEvent %>% as.numeric
+    os_table = os_left_align(os_table,cover=left)
+    os_table = os_right_align(os_table,cutoff=right)
+    os_table
+}
+
 
 #' Title
 #'
 #' @param data
 #' @param covariates
 #' @param key
-#' @param test.method
+#' @param test.method  test.method in c('logrank','wald','likelihood'), deault wald
 #' @param tags
 #' @param auto_anno
 #' @param join
@@ -16,6 +79,7 @@
 #' @export
 #'
 #' @examples
+library(ggfortify)
 yplot_survival = function(data, covariates
                           ,key=NULL
                           ,test.method='wald'
@@ -23,11 +87,11 @@ yplot_survival = function(data, covariates
                           ,auto_anno=TRUE
                           ,join='_'
 ){
-    " test.method in c('logrank','wald','likelihood') "
+
     if (! is.null(key)){
-        templ = stringr::str_flatten(c('Surv(',key,join,tags[[1]],',',key,join,tags[[2]],')~'))
+        templ = stringr::str_flatten(c('survival::Surv(',key,join,tags[[1]],',',key,join,tags[[2]],')~'))
     }else{
-        templ = 'Surv(survivalMonth,survivalEvent)~'
+        templ = 'survival::Surv(survivalMonth,survivalEvent)~'
     }
     all_cases = data %>% nrow
     univ_formulas <- sapply(covariates,
@@ -36,8 +100,8 @@ yplot_survival = function(data, covariates
                                 formu=as.formula(paste(templ, x))
                                 res[['formula']] = formu
                                 res[['feature']] = x
-                                res[['model']] = survfit(formu, data = data,)
-                                diff = coxph(formu, data = data) %>% summary
+                                res[['model']] = survival::survfit(formu, data = data,)
+                                diff = survival::coxph(formu, data = data) %>% summary
                                 if (test.method=='logrank'){
                                     p.value = diff$sctest[['pvalue']]
                                 }else if (test.method=='wald'){

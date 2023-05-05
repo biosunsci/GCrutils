@@ -1,7 +1,7 @@
 #  ----------------- Private Global VAR ---------------
 SSGSEA_BASE_REF_DIR = './extdata/'
 COMMON_GMT_TAGS = c('hm', 'kegg', 'im', 'im_jnj')
-
+npg = ggsci::pal_npg()(10)
 # ---------------- Enrich Func -----------------------------
 #' GSEA analysis using different expression results
 #'
@@ -33,7 +33,7 @@ ydo_gsea = function (diff = NULL,
                      ...)
 {
     "set in c('all','all3','gsea','hm','kegg','immune','immune.jnj') "
-    npg = pal_npg()(10)[2:1]
+    npg = ggsci::pal_npg()(10)[2:1]
     .T_ylab_wrap = 40
     refs = list(
         hm = c(figureTitle = "DiffExpr Hallmark enricment",
@@ -217,16 +217,16 @@ ydo_GSEA = function (diff = NULL,
                      .lineheight = 0.75,
                      pvalueCutoff = 0.2,
                      ...) {
-    npg = pal_npg()(10)[2:1]
+    npg = ggsci::pal_npg()(10)[2:1]
     .T_ylab_wrap = 40
     refs = list(
-        hm = c(figureTitle = "Hallmark enricment",
+        hm = c(figureTitle = "Hallmark Enrichment",
                Name = "Hallmark"),
-        kegg = c(figureTitle = "KEGG enrichment",
+        kegg = c(figureTitle = "KEGG Enrichment",
                  Name = "KEGG"),
-        im = c(figureTitle = "Immune Infiltration enrichment",
+        im = c(figureTitle = "Immune Infiltration Enrichment",
                Name = "Immune"),
-        im_jnj = c(figureTitle = "Immune Infiltration enrichment",
+        im_jnj = c(figureTitle = "Immune Infiltration Enrichment",
                    Name = "Immune2")
     )
     if (set == "all") {
@@ -263,7 +263,7 @@ ydo_GSEA = function (diff = NULL,
         figureTitle = v["figureTitle"]
         Name = v["Name"]
         gmt = yload_gmt(key)
-        res.gsea = GSEA(
+        res.gsea = clusterProfiler::GSEA(
             geneList = gene_list,
             TERM2GENE = gmt,
             minGSSize = minGSSize,
@@ -440,7 +440,7 @@ ydo_GO_bydiff = function(diff,
                     all_genes,
                     fromType = "SYMBOL",
                     toType = c("ENTREZID"),
-                    OrgDb = org.Hs.eg.db
+                    OrgDb = "org.Hs.eg.db"
                 ) %>%
                     arrange(SYMBOL) %>% distinct(SYMBOL, .keep_all = TRUE) %>%
                     column_to_rownames("SYMBOL"),
@@ -554,7 +554,7 @@ ydo_GO = function(sig_genes,
         npg = ggsci_col_scheme
     }
     if (is.null(all_genes)) {
-        all_genes = readRDS('./extdata/all_genes_symbol.RDS')
+        all_genes = yload_symbols_all_genes_18669()
         print(
             'all_genes is NULL, Read 19039 gene symbols from extdata/all_genes_symbol.RDS -> all_genes'
         )
@@ -610,7 +610,7 @@ ydo_GO = function(sig_genes,
         gene       = GENE.REF[sig_genes, 'ENTREZID'],
         universe      = GENE.REF$ENTREZID,
         ont           = ont,
-        OrgDb         = org.Hs.eg.db,
+        OrgDb         = "org.Hs.eg.db",
         keyType       = "ENTREZID",
         pAdjustMethod = "BH",
         pvalueCutoff  = p.t,
