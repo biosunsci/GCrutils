@@ -99,7 +99,7 @@ ynormalize_count_bydeseq2 = function(count_file_
             write("[warning] in func vsd: less than 'nsub' rows with mean normalized count > 5, use varianceStabilizingTransformation directly",2)
             vsd =  varianceStabilizingTransformation(ddsNormMatrix)
         }
-        sig_table_new=assay(vsd)
+        sig_table_new=SummarizedExperiment::assay(vsd)
         x$normd_count=sig_table_new
         # x$dds_norm_matrix=ddsNormMatrix
     }
@@ -147,7 +147,7 @@ ydo_count_normlization_deseq2 = function(cnt.sorted,colData.sorted){
         write("[warning] in func vsd: less than 'nsub' rows with mean normalized count > 5, use varianceStabilizingTransformation directly",2)
         vsd =  DESeq2::varianceStabilizingTransformation(ddsNormMatrix)
     }
-    sig_table_new=assay(vsd)
+    sig_table_new=SummarizedExperiment::assay(vsd)
 
     # x$dds_norm_matrix=ddsNormMatrix
 
@@ -157,17 +157,64 @@ ydo_count_normlization_deseq2 = function(cnt.sorted,colData.sorted){
 
 
 
-#' Title
+#' DiffExpr Analysis un-paired
 #'
-#' @param cnt.sorted
-#' @param colData.sorted
+#' @description assert colnames(cnt.sorted)==rownames(colData.sorted)
 #'
-#' @return
+#' @param cnt.sorted rows are genes, columns are TSBs (Tumor Sample Barcode of samples)
+#' @param colData.sorted rows are TSBs and columns are groups, 列名至少包含['ap','g'] for
+#'   @paired=F 列名至少包含['ap','a','g'] for @paired=T
+#' @param paired Do paired test or un-paired test
+#' @param levels set compare order, the first in @levels is used as the control group.
+#' @param ...
+#'
+#' @return list named c(diff_expr,compare_order,tag_to_add,diff_expr_details)
 #' @export
 #'
 #' @examples
-ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted){
+ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted,paired=FALSE,levels=NULL,...){
+    if (is.null(levels)){
+        levels = colData.sorted$g %>% unique
+    }
+    colData = colData.sorted %>%
+        column_to_rownames('Tumor_Sample_Barcode') %>%
+        select(a,g) %>%
+        mutate(a=factor(a),g=factor(g,levels=levels)) %>%
+        arrange(a,g)
+
+    cnt.sorted = cnt.sorted[,row.names(colData)]
+
     x = alist()
+    x$compare_ref_group = levels[[1]]
+    x$compare_order = rev(levels)
+    x$tag_to_add = x$compare_order %>% str_flatten(collapse = '_vs_')
+
+    if(paired==TRUE){
+        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ a + g)
+        paired_prop = 'paired'
+    }else{
+        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ g)
+        paired_prop = 'unpaired'
+    }
+    print('-------------------------------------------------------------')
+    print(paste0('Comparing > ',paired_prop,' < ',x$tag_to_add,', REF_GROUP = ',x$compare_ref_group))
+    # set control group for comparation
+    dds_paired$group <- relevel(dds_paired$g, ref = levels[[1]])
+    dds_paired <- DESeq2::DESeq(dds_paired)
+    # get result table
+    diff_expr <- as.data.frame(DESeq2::results(dds_paired)) %>%
+        mutate(abs_log2FC = abs(log2FoldChange),.before = lfcSE) %>%
+        arrange(pvalue,log2FoldChange)
+    # pack add info
+    x$cnt_table = count_table
+    x$colData = colData
+    x$diff_expr = diff_expr
+    x$paired = paired
+    # x$dds_dif_exp_matrix=ddsDifExpMatrix
+    class(x) <- c('DEA.results',class(x))
+    print('Done')
+    return (x)
+
     # DO diff expr analysis
     # design, the formula design, is a named vector with values is the TSB, and names is the grouping like
     # c(余先梅='GBM',刘利新='Midline',刘杰='Midline',刘锡全='GBM',...)
@@ -187,6 +234,7 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted){
         arrange(desc(log2FC_abs))
     x
 }
+
 #' Title
 #'
 #' @param cnt

@@ -388,7 +388,6 @@ echo = function(mat,nrowmax = 100,ncolmax=100){
     options(repr.matrix.max.cols=max(30,col))
     options(repr.matrix.max.rows=max(10,row))
     View(mat)
-    View(mat)
     options(repr.matrix.max.cols=cur_ncol)
     options(repr.matrix.max.rows=cur_nrow)
 }

@@ -94,7 +94,7 @@ ydo_gsea = function (diff = NULL,
         print(paste("after filter,", n.res, "results left"))
         if (n.res > 0) {
             res.tb.gsea %<>% mutate(
-                Description = fct_reorder(Description,
+                Description = forcats::fct_reorder(Description,
                                           p.adjust, .desc = TRUE),
                 EnrichedGeneNum = core_enrichment %>%
                     str_split("/") %>% sapply(length),
@@ -210,12 +210,12 @@ ydo_gsea = function (diff = NULL,
 ydo_GSEA = function (diff = NULL,
                      gene_list = NULL,
                      set = "gsea",
+                     pvalueCutoff = 0.2,
                      p.adjust.t = 0.05,
-                     p.t = NA,
+                     p.t = 1,
                      minGSSize = 10,
                      maxGSSize = 500,
                      .lineheight = 0.75,
-                     pvalueCutoff = 0.2,
                      ...) {
     npg = ggsci::pal_npg()(10)[2:1]
     .T_ylab_wrap = 40
@@ -229,21 +229,29 @@ ydo_GSEA = function (diff = NULL,
         im_jnj = c(figureTitle = "Immune Infiltration Enrichment",
                    Name = "Immune2")
     )
-    if (set == "all") {
-        run = refs
+    if (length(set)==1){
+        if (set == "all") {
+            run = refs
+        }
+        else if (set == "gsea") {
+            run = refs[c("hm", "kegg")]
+        }
+        else if (set == "all3") {
+            run = refs[c("hm", "kegg", "im")]
+        }
+        else if (set %in% c("hm", "kegg", "im", "im_jnj")) {
+            run = refs[set]
+        }
+        else {
+            stop("set must in in c('all','all3','gsea','hm','kegg','im','im_jnj')")
+        }
+    }else{
+        run = intersect(set,c("hm", "kegg", "im", "im_jnj"))
+        run = refs[run]
     }
-    else if (set == "gsea") {
-        run = refs[c("hm", "kegg")]
-    }
-    else if (set == "all3") {
-        run = refs[c("hm", "kegg", "im")]
-    }
-    else if (set %in% c("hm", "kegg", "im", "im_jnj")) {
-        run = refs[set]
-    }
-    else {
-        stop("set must in in c('all','all3','gsea','hm','kegg','im','im_jnj')")
-    }
+    stopifnot(length(run)>0)
+    message('run ',length(run),' Enrichments ',names(run) %>% str_flatten_comma())
+
     res = list()
     if (!is.null(diff)) {
         if (!("symbol" %in% colnames(diff))) {
@@ -258,6 +266,7 @@ ydo_GSEA = function (diff = NULL,
     else {
         stop("input diff / gene_list can not be all NA")
     }
+    message('FILTER the result by p.adjust < p.ap.adjust.t=',p.adjust.t, "; pvalue < p.t=", p.t)
     for (key in names(run)) {
         v = run[[key]]
         figureTitle = v["figureTitle"]
@@ -272,13 +281,13 @@ ydo_GSEA = function (diff = NULL,
             pvalueCutoff = pvalueCutoff,
             ...
         )
-        res.tb.gsea = res.gsea@result %>% dplyr::filter(p.adjust <
-                                                            p.adjust.t)
+        res.tb.gsea = res.gsea@result %>%
+            dplyr::filter(p.adjust < p.adjust.t, pvalue < p.t)
         n.res = res.tb.gsea %>% nrow
         print(paste("after filter,", n.res, "results left"))
         if (n.res > 0) {
             res.tb.gsea %<>% mutate(
-                Description = fct_reorder(Description,
+                Description = forcats::fct_reorder(Description,
                                           p.adjust, .desc = TRUE),
                 EnrichedGeneNum = core_enrichment %>%
                     str_split("/") %>% sapply(length),
@@ -370,8 +379,8 @@ ydo_GSEA = function (diff = NULL,
                 gene_list = gene_list,
                 res.gsea = res.gsea,
                 res.tb.gsea = res.tb.gsea,
-                gg = NA,
-                figsize = NA
+                gg = ggplot(),
+                figsize = c(6,6)
             )
         }
     }
@@ -472,7 +481,7 @@ ydo_GO_bydiff = function(diff,
         }
         res.tb = rbind(res.tb[[1]], res.tb[[2]]) %>%
             mutate(
-                Description = fct_reorder(Description, p.adjust, .desc = TRUE),
+                Description = forcats::fct_reorder(Description, p.adjust, .desc = TRUE),
                 ONTOLOGY = factor(ONTOLOGY, levels = c("BP", "MF", "CC")),
                 EnrichedGeneNum = Count,
                 setSize = BgRatio %>%
@@ -495,7 +504,7 @@ ydo_GO_bydiff = function(diff,
         )
         res.tb = res.ego@result %>%
             mutate(
-                Description = fct_reorder(Description, p.adjust, .desc = TRUE),
+                Description = forcats::fct_reorder(Description, p.adjust, .desc = TRUE),
                 ONTOLOGY = factor(ONTOLOGY, levels = c("BP", "MF", "CC")),
                 EnrichedGeneNum = Count,
                 setSize = BgRatio %>%
@@ -623,7 +632,7 @@ ydo_GO = function(sig_genes,
         res.tb = data.frame()
     } else{
         res.tb = ego@result %>% mutate(
-            Description = fct_reorder(Description, p.adjust, .desc = TRUE),
+            Description = forcats::fct_reorder(Description, p.adjust, .desc = TRUE),
             ONTOLOGY = factor(ONTOLOGY, levels = c('BP', 'MF', 'CC')),
             EnrichedGeneNum = GeneRatio %>% str_split('/', simplify = TRUE) %>% `[`(, 1) %>% as.integer,
             setSize = BgRatio %>% str_split('/', simplify = TRUE) %>% `[`(, 1) %>% as.integer,

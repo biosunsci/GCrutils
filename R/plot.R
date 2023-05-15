@@ -223,53 +223,79 @@ yplot_heatmap = function(
 
 #' Plot volcano plot
 #'
-#' @param diff_expr RNA diff expr
-#' @param value_var column name which used for filter
-#' @param threshold vector of length 2, the log2FoldChange threshold
-#' @param p
+#' @param diff_expr RNA diff expr, colnames are:
+#'   'baseMean','log2FoldChange','abs_log2FC','lfcSE','stat','pvalue','padj'
+#' @param value_var ='padj', column name which used for filter
 #' @param add_label whether to add the label text of genes
 #' @param ...
+#' @param logFC_threshold vector of length 2, the log2FoldChange threshold
+#' @param p.t pvalue filter threshold which apply to `value_var` column
 #'
 #' @return list(gg=ggplot,de=data.frame)
 #' @export
 #'
 #' @examples
-yplot_volcano_using_de = function(diff_expr, value_var = 'padj', threshold=c(-2,2),p=0.05,add_label=FALSE,...){
-    if (diff_expr %>% is.data.frame){
+yplot_volcano_using_de = function (diff_expr,
+                                   value_var = "padj",
+                                   logFC_threshold = c(-2, 2),
+                                   p.t = 0.05,
+                                   add_label = FALSE,
+                                   ...) {
+    if (diff_expr %>% is.data.frame) {
         de = diff_expr
-    }else{
+    }
+    else {
         de = diff_expr %>% data.frame
     }
     de$diffexpressed <- "NO"
-    # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP"
-    de$diffexpressed[de$log2FoldChange > threshold[2] & de$padj < p] <- "UP"
-    # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
-    de$diffexpressed[de$log2FoldChange < threshold[1] & de$padj < p] <- "DOWN"
-    de$diffexpressed = factor(de$diffexpressed,levels=c('UP','NO','DOWN'))
+    de$diffexpressed[de$log2FoldChange > logFC_threshold[2] &
+                         de[[value_var]] <
+                         p.t] <- "UP"
+    de$diffexpressed[de$log2FoldChange < logFC_threshold[1] &
+                         de[[value_var]] <
+                         p.t] <- "DOWN"
+    de$diffexpressed = factor(de$diffexpressed, levels = c('DOWN', 'NO', 'UP'))
     de$y = -log10(de[[value_var]])
-    if (add_label){
+
+    if (add_label) {
         library(ggrepel)
         de$delabel <- NA
         de$gene_symbol = de %>% rownames
-        de$delabel[de$diffexpressed != "NO"] <- de$gene_symbol[de$diffexpressed != "NO"]
-        g <- ggplot(data=de, aes(x=log2FoldChange, y=y, col=diffexpressed, label=delabel))+
-            geom_point(alpha=0.7)+
-            geom_text_repel(max.iter=10, box.padding = 1)
-    }else{
-        g <- ggplot(data=de, aes(x=log2FoldChange, y=y, col=diffexpressed))+
-            geom_point(alpha=0.7)
+        de$delabel[de$diffexpressed != "NO"] <-
+            de$gene_symbol[de$diffexpressed !=
+                               "NO"]
+        g <- ggplot(data = de,
+                    aes(
+                        x = log2FoldChange,
+                        y = y,
+                        col = diffexpressed,
+                        label = delabel
+                    )) + geom_point(alpha = 0.7) +
+            geom_text_repel(max.iter = 10, box.padding = 1)
     }
-    if (value_var=='padj'){
+    else {
+        g <- ggplot(data = de, aes(x = log2FoldChange, y = y,
+                                   col = diffexpressed)) +
+            geom_point(alpha = 0.7)
+    }
+    if (value_var == "padj") {
         old_value_var = value_var
-        value_var = 'FDR'
+        value_var = "FDR"
     }
     g = g + theme_minimal() +
-        ylab(paste0("-log10(",value_var,")")) +
-        scale_color_manual(values=c("red", "gray", "blue")) +
-        geom_vline(xintercept=threshold, col="gray",linetype='longdash') +
-        geom_hline(yintercept=-log10(p), col="gray",linetype='longdash')
-
-    list(gg=g,de=de)
+        ylab(paste0("-log10(", value_var,
+                    ")")) +
+        scale_color_manual(values = c("blue", "gray",
+                                      "red")) +
+        geom_vline(xintercept = logFC_threshold,
+                   col = "gray",
+                   linetype = "longdash") +
+        geom_hline(
+            yintercept = -log10(p.t),
+            col = "gray",
+            linetype = "longdash"
+        )
+    list(gg = g, de = de)
 }
 
 
@@ -465,44 +491,21 @@ yplot_venns = function(...){
 #' @export
 #'
 #' @examples
-yplot_venns_bydf = function (df, sel_col, export = F, ...) {
-    library(VennDiagram)
-    grps = df$Clin_classification %>% unique
-    DICT = list(draw.single.venn, draw.pairwise.venn, draw.triple.venn,
-                draw.quad.venn, draw.quintuple.venn)
-    plot_func = DICT[[length(grps)]]
-    sets = list()
-    for (i in grps) {
-        sets[[i]] = df %>% filter(g == !!i) %>% .[[sel_col]] %>%
-            unique
-    }
-    print(sets %>% names)
-    argv = list()
-    for (l in 1:length(sets)) {
-        for (i in combn(1:length(sets), l, simplify = F)) {
-            s = sets[i]
-            if (l > 1) {
-                r = Reduce(intersect, s) %>% length
-                argv[[str_flatten(c("n", i))]] = r
-            }
-            else {
-                r = length(s[[1]])
-                argv[[str_flatten(c("area", i))]] = r
-            }
-        }
-    }
-    argv$cross.area = argv$n12
-    argv = argv %>% ypush(list(category = sets %>% names, fill = c("dodgerblue",
-                                                                   "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
-                               cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE))
-    print(argv %>% names)
-    args = list(...) %>% ypush(list(x = plot_func, args = argv,
-                                    export = export, flag = "venn"))
-    n = args %>% names
-    if (!("suffix" %in% n)) {
-        args$suffix = sel_col
-    }
-    res = ydumpto %>% do.call(args)
+yplot_venns_bydf = function (df,id_col, group_col='Clin_classification',  ...) {
+    # my_list <- lapply(unique(df[[group_col]]), function(x) {
+    #     df[[id_col]][df[[group_col]] == x]
+    # })
+    # names(my_list) <- unique(df[[group_col]])
+
+    sym_group_col = sym(group_col)
+    sym_id_col = sym(id_col)
+    my_list = df %>%
+        group_by(!!sym_group_col) %>%
+        summarize(values = list(!!sym_id_col)) %>%
+        ungroup() %>%
+        {setNames(.$values, .[[group_col]])}
+
+    res = yplot_venns %>% do.call(my_list)
     res
 }
 

@@ -2,7 +2,7 @@
 #' @description  basically, this function affects the following plot function which will use global var WIDTH and HEIGHT
 #'   to determine the display repr.plot.width and repr.plot.height, set global variables depend on the third parameter
 #'   `.set_global`
-#' @param w set global WIDHT,  in inch
+#' @param w set global WIDHT,  in inch, if length(w) == 2
 #' @param h set global HEIGHT, in inch
 #' @param .set_global TRUE, set global vars, else no global variables set
 #'
@@ -10,15 +10,20 @@
 #' @export
 #'
 #' @examples
-make.custom = function(w,h,.set_global=TRUE){
-    options(repr.plot.width=w
-            ,repr.plot.height=h
-            #         ,repr.matrix.max.cols=30
-            #         ,repr.matrix.max.rows=10
-    )
-    if (.set_global==TRUE){
-        assign('WIDTH',value = w, envir = .GlobalEnv)
-        assign('HEIGHT',value = h, envir = .GlobalEnv)
+make.custom = function (w, h=NULL, .set_global = TRUE) {
+    l = length(w)
+    if (l==2){
+        h = w[[2]]
+        w = w[[1]]
+    }else if(l == 1){
+        stopifnot(!is.null(h))
+    }else{
+        stop('wrong w,h value')
+    }
+    options(repr.plot.width = w, repr.plot.height = h)
+    if (.set_global == TRUE) {
+        assign("WIDTH", value = w, envir = .GlobalEnv)
+        assign("HEIGHT", value = h, envir = .GlobalEnv)
     }
 }
 
