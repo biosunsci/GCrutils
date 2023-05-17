@@ -113,18 +113,7 @@ yload_dfx = function(li = NULL,
                 } else{
                     stop('wrong tmp length')
                 }
-                if (fname %>% str_detect(fixed('.'))) {
-                    write(
-                        paste(
-                            '[INFO] skip ',
-                            i,
-                            ' for its not right format: multi-dot in filename'
-                        ),
-                        2
-                    )
-                } else{
-                    files = files %>% ypush(c(myfrm, fname, fextname))
-                }
+                files = files %>% ypush(c(myfrm, fname, fextname))
             }
         }
     }

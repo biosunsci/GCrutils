@@ -17,9 +17,9 @@ Depends:
     BSgenome.Hsapiens.UCSC.hg19,
     magrittr (>= 2.0),
     dplyr (>= 1.0),
-    ggplot2 (>= 3.4),
-    stringr (>= 1.5),
-    tibble (>= 3.2),
+    ggplot2 (>= 3.0),
+    stringr (>= 1.0),
+    tibble (>= 3.0),
     grDevices,
     ggfortify
 Imports:
