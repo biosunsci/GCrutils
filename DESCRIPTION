@@ -31,6 +31,7 @@ Imports:
     Rtsne (>= 0.16),
     RColorBrewer (>= 1.1),
     openxlsx (>= 4.2.5),
+    xlsx,
     jsonlite (>= 1.8.4),
     ComplexHeatmap (>= 2.10.0),
     ggplotify (>= 0.1.0),
@@ -44,6 +45,7 @@ Imports:
     ggrepel,
     org.Hs.eg.db
 Suggests: 
+    ggh4x,
     testthat (>= 3.0.0),
     BSgenome,
     GenomicRanges,

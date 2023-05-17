@@ -7,22 +7,23 @@
 yplot_volcano_using_de(
   diff_expr,
   value_var = "padj",
-  threshold = c(-2, 2),
-  p = 0.05,
+  logFC_threshold = c(-2, 2),
+  p.t = 0.05,
   add_label = FALSE,
   ...
 )
 }
 \arguments{
-\item{diff_expr}{RNA diff expr}
+\item{diff_expr}{RNA diff expr, colnames are:
+'baseMean','log2FoldChange','abs_log2FC','lfcSE','stat','pvalue','padj'}
 
-\item{value_var}{column name which used for filter}
+\item{value_var}{='padj', column name which used for filter}
 
-\item{threshold}{vector of length 2, the log2FoldChange threshold}
+\item{logFC_threshold}{vector of length 2, the log2FoldChange threshold}
+
+\item{p.t}{pvalue filter threshold which apply to `value_var` column}
 
 \item{add_label}{whether to add the label text of genes}
-
-\item{...}{}
 }
 \value{
 list(gg=ggplot,de=data.frame)

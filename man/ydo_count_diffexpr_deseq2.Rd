@@ -2,13 +2,31 @@
 % Please edit documentation in R/deseq2.R
 \name{ydo_count_diffexpr_deseq2}
 \alias{ydo_count_diffexpr_deseq2}
-\title{Title}
+\title{DiffExpr Analysis un-paired}
 \usage{
-ydo_count_diffexpr_deseq2(cnt.sorted, colData.sorted)
+ydo_count_diffexpr_deseq2(
+  cnt.sorted,
+  colData.sorted,
+  paired = FALSE,
+  levels = NULL,
+  ...
+)
 }
 \arguments{
-\item{colData.sorted}{}
+\item{cnt.sorted}{rows are genes, columns are TSBs (Tumor Sample Barcode of samples)}
+
+\item{colData.sorted}{rows are TSBs and columns are groups, 列名至少包含['ap','g'] for
+@paired=F 列名至少包含['ap','a','g'] for @paired=T}
+
+\item{paired}{Do paired test or un-paired test}
+
+\item{levels}{set compare order, the first in @levels is used as the control group.}
+
+\item{...}{}
+}
+\value{
+list named c(diff_expr,compare_order,tag_to_add,diff_expr_details)
 }
 \description{
-Title
+assert colnames(cnt.sorted)==rownames(colData.sorted)
 }

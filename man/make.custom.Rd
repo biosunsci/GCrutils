@@ -4,10 +4,10 @@
 \alias{make.custom}
 \title{Set the size for the following plots}
 \usage{
-make.custom(w, h, .set_global = TRUE)
+make.custom(w, h = NULL, .set_global = TRUE)
 }
 \arguments{
-\item{w}{set global WIDHT,  in inch}
+\item{w}{set global WIDHT,  in inch, if length(w) == 2}
 
 \item{h}{set global HEIGHT, in inch}
 

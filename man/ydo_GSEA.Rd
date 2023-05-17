@@ -8,12 +8,12 @@ ydo_GSEA(
   diff = NULL,
   gene_list = NULL,
   set = "gsea",
+  pvalueCutoff = 0.2,
   p.adjust.t = 0.05,
-  p.t = NA,
+  p.t = 1,
   minGSSize = 10,
   maxGSSize = 500,
   .lineheight = 0.75,
-  pvalueCutoff = 0.2,
   ...
 )
 }

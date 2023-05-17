@@ -442,21 +442,40 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 
 #' Plot venn diagram for 2~5 sets
 #'
-#' @param ...
+#' @param ... named params or un-named params, each represents a set to be draw, Number of params
+#'   min2 max5
+#' @param .title NOT implement at current
+#' @param plot.argv additional params control the plot appearance
 #'
 #' @return
 #' @export
 #'
 #' @examples
-yplot_venns = function(...){
+yplot_venns = function(...
+                       ,.title=NULL
+                       ,plot.argv=list(cat.dist = 0.05)){
+    # if parameters is not named, get the sym name of each parameter
     sets = list(...)
+    if (is.null(names(sets))) {
+        sets_syms <- match.call(expand.dots = FALSE)$...
+        names(sets) <- paste0("arg", seq_along(sets_syms))
+        names(sets) <- sapply(sets_syms, deparse)
+    }
+    # fi
+
     x = length(sets)
     stopifnot(x <= 5&& x >=1)
 
     argv = list()
-    DICT = list(VennDiagram::draw.single.venn, VennDiagram::draw.pairwise.venn, VennDiagram::draw.triple.venn,
-                VennDiagram::draw.quad.venn, VennDiagram::draw.quintuple.venn)
+    DICT = list(  draw.single.venn = VennDiagram::draw.single.venn
+                  , draw.pairwise.venn = VennDiagram::draw.pairwise.venn
+                  , draw.triple.venn = VennDiagram::draw.triple.venn
+                  , draw.quad.venn = VennDiagram::draw.quad.venn
+                  , draw.quintuple.venn = VennDiagram::draw.quintuple.venn)
+
     plot_func = DICT[[x]]
+    plot_func_name = names(DICT)[[x]]
+
     for (l in 1:length(sets)) {
         for (i in combn(1:length(sets), l, simplify = F)) {
             s = sets[i]
@@ -471,12 +490,15 @@ yplot_venns = function(...){
         }
     }
     argv$cross.area = argv$n12
-    argv = argv %>% ypush(list(category = sets %>% names, fill = c("dodgerblue",
-                                                                   "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
-                               cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE))
+    argv = argv %>% ypush(list(category = sets %>% names
+                               , fill = c("dodgerblue",
+                                          "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
+                               cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE
+    )%>%c(plot.argv))
     make.custom(6,6)
     x = do.call(plot_func,args = argv)
-    list(func=plot_func,args=argv)
+
+    list(plot_func=plot_func,args=argv,func_name=plot_func_name)
 }
 
 

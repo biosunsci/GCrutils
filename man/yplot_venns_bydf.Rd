@@ -4,7 +4,7 @@
 \alias{yplot_venns_bydf}
 \title{Title}
 \usage{
-yplot_venns_bydf(df, sel_col, export = F, ...)
+yplot_venns_bydf(df, id_col, group_col = "Clin_classification", ...)
 }
 \arguments{
 \item{...}{}

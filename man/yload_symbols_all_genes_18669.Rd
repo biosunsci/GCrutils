@@ -6,6 +6,9 @@
 \usage{
 yload_symbols_all_genes_18669()
 }
+\value{
+a character vector
+}
 \description{
 Load all GC used gene symbols
 }

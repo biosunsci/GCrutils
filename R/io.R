@@ -54,6 +54,7 @@ yload_dfx = function(li = NULL,
                      retmode = 'local',
                      verbose = TRUE,
                      row.names = NULL,
+                     sheet_name = 1,
                      ...) {
     # retmode in c('local','global')
     # fextname in c(str, NULL)
@@ -148,6 +149,7 @@ yload_dfx = function(li = NULL,
         } else{
             ffname = str_flatten(c(vname, '.', fextname))
         }
+
         input = yfile_path(myfrm, ffname)
 
         if (verbose == TRUE)
@@ -171,7 +173,11 @@ yload_dfx = function(li = NULL,
                 ref_df[layers][[1]] <- ref_df[layers][[1]][-1]
             }
             res[[vname]] = ref_df
-        } else{
+        } else if (fextname =='xls'){
+            res[[vname]] <- xlsx::read.xlsx(input, sheetIndex = sheet_name,...)
+        } else if (fextname =='xlsx') {
+            res[[vname]] <- openxlsx::read.xlsx(input, sheet = sheet_name,...)
+        } else {
             "fextname == {txt,dfx,...} "
             argv$file = input
             res[[vname]] = utils::read.table %>% do.call(args = argv)
