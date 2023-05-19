@@ -6,7 +6,7 @@
 #' @export
 #'
 #' @examples
-yset_color_scheme = function(name='wjw'){
+ygen_set_color_scheme = function(name='wjw'){
     gg_color_hue <- function(n,start=15) {
         hues = seq(start, 360 + start, length = n + 1)
         hcl(h = hues, l = 65, c = 100)[1:n]
@@ -206,5 +206,5 @@ show_anno_col = function(col_anno,...){
         res = c(res,i,rep('#FFFFFF',l-length(i)))
     }
     print(col_anno)
-    show_col(res,ncol = l,...)
+    scales::show_col(res,ncol = l,...)
 }

@@ -14,7 +14,6 @@ Encoding: UTF-8
 LazyData: true
 Depends:
     R (>= 4.1),
-    BSgenome.Hsapiens.UCSC.hg19,
     magrittr (>= 2.0),
     dplyr (>= 1.0),
     ggplot2 (>= 3.0),
@@ -31,7 +30,6 @@ Imports:
     Rtsne (>= 0.16),
     RColorBrewer (>= 1.1),
     openxlsx (>= 4.2.5),
-    xlsx,
     jsonlite (>= 1.8.4),
     ComplexHeatmap (>= 2.10.0),
     ggplotify (>= 0.1.0),
@@ -45,6 +43,7 @@ Imports:
     ggrepel,
     org.Hs.eg.db
 Suggests: 
+    BSgenome.Hsapiens.UCSC.hg19,
     ggh4x,
     testthat (>= 3.0.0),
     BSgenome,
