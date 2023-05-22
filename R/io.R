@@ -847,6 +847,42 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     argv[[1]]
 }
 
+.ydumpto.ggsurvplot = function(x,
+                       fpath,
+                       ffname,
+                       fextname,
+                       verbose=TRUE,
+                       ...) {
+    if (fextname == '')
+        fextname = 'pdf'
+    # used by pdf
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by cairo_pdf, png, svg
+    filename = file
+
+    if (fextname %in% c('png', 'svg')) {
+        dev = get(fextname, asNamespace('grDevices'))
+    } else if (fextname == 'pdf') {
+        dev = get(PDF_DEVICE, asNamespace('grDevices'))
+    }
+
+    argv = yget_args(..., .f = dev)
+    if (argv$width %>% is.null)
+        argv$width = get("WIDTH",envir = .GlobalEnv)
+    if (argv$height %>% is.null)
+        argv$height = get("HEIGHT",envir = .GlobalEnv)
+
+    tryCatch({
+        dev %>% do.call(argv)
+        print(x)
+    }, finally = {
+        dev.off()
+    })
+    ylog('write 1 <', fextname,'> in [',argv$width,',',
+         argv$height, '] inches at', filename, verbose = verbose)
+    argv[[1]]
+}
+
 .ydumpto.Heatmap = function(x,
                             fpath,
                             ffname,
@@ -883,6 +919,8 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
          argv$height, '] inches at', filename, verbose = verbose)
 
 }
+
+
 
 .ydumpto.pheatmap = function(x,
                              fpath,
