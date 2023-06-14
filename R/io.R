@@ -733,7 +733,6 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     UseMethod('.ydumpto')
 }
 
-
 .ydumpto.call = function(x,
                          fpath,
                          ffname,
@@ -1043,56 +1042,74 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
                              verbose=TRUE,
                              ...) {
     "  "
-    argv = yget_args(...)
-    if ('args' %in% (argv %>% names)) {
-        print('⚠ run .ydumpto.function with no @args argument supplied')
-        args = argv %>% ygetlast('args', .squeeze = T)
-        argv = argv %>% yrmlast(c('args', 'x'))
-    } else{
-        args = NULL
-        argv = argv %>% yrmlast(c('x'))
-    }
-
-    if (verbose == TRUE)
-        ylog('you are dumping a function, assuming its a plotting one',
-             .addtime = F)
-    if (fextname=='') {
+    if (fextname == '')
         fextname = 'pdf'
-
-    } else if (nchar(as.character(fextname)) > 20) {
-        print(
-            paste0(
-                'There maybe somthing wrong with <fextname>, it is to long: "',
-                str_sub(as.character(fextname), 1, 20),
-                '..." total ',
-                nchar(as.character(fextname)),
-                ' chars'
-            )
-        )
-        stop('!')
-    }
-    filename = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by pdf
+    file = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    # used by cairo_pdf, png, svg
+    filename = file
 
     if (fextname %in% c('png', 'svg')) {
         dev = get(fextname, asNamespace('grDevices'))
+        argv = yget_args(..., .f = dev)
         argv$filename = filename
     } else if (fextname == 'pdf') {
         dev = get(PDF_DEVICE, asNamespace('grDevices'))
+        argv = yget_args(..., .f = dev)
         if (PDF_DEVICE=='cairo_pdf')
             argv$filename = filename
         else if (PDF_DEVICE =='pdf')
             argv$file = filename
     }
+
+
+    if (argv$width %>% is.null)
+        argv$width = get("WIDTH",envir = .GlobalEnv)
+    if (argv$height %>% is.null)
+        argv$height = get("HEIGHT",envir = .GlobalEnv)
+
     tryCatch({
-        argv1 = argv %>% ygetlast(formals(dev) %>% names)
-        ylog('[dev args]', argv1 %>% names, ',', .addtime = F)
-        dev %>% do.call(args = argv1)
-        ylog('[plot args]', args %>% names, ',', .addtime = F)
+        dev %>% do.call(args = argv)
         res = x %>% do.call(args)
     }, finally = {
         dev.off()
     })
-    ylog('write 1', fextname, 'at', filename, verbose = verbose)
+
+    ylog('write 1 <', fextname,'> in [',argv$width,',',
+         argv$height, '] inches at', filename, verbose = verbose)
+    # argv = yget_args(...)
+    # if ('args' %in% (argv %>% names)) {
+    #     print('⚠ run .ydumpto.function with no @args argument supplied')
+    #     args = argv %>% ygetlast('args', .squeeze = T)
+    #     argv = argv %>% yrmlast(c('args', 'x'))
+    # } else{
+    #     args = NULL
+    #     argv = argv %>% yrmlast(c('x'))
+    # }
+    #
+    # if (verbose == TRUE)
+    #     ylog('you are dumping a function, assuming its a plotting one',
+    #          .addtime = F)
+    # if (fextname=='') {
+    #     fextname = 'pdf'
+    #
+    # } else if (nchar(as.character(fextname)) > 20) {
+    #     print(
+    #         paste0(
+    #             'There maybe somthing wrong with <fextname>, it is to long: "',
+    #             str_sub(as.character(fextname), 1, 20),
+    #             '..." total ',
+    #             nchar(as.character(fextname)),
+    #             ' chars'
+    #         )
+    #     )
+    #     stop('!')
+    # }
+    # filename = yfile_path(fpath, paste(ffname, fextname, sep = '.'))
+    #
+    #
+    #
+    # ylog('write 1', fextname, 'at', filename, verbose = verbose)
     filename
 }
 

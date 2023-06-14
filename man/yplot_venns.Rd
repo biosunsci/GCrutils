@@ -4,7 +4,7 @@
 \alias{yplot_venns}
 \title{Plot venn diagram for 2~5 sets}
 \usage{
-yplot_venns(..., .title = NULL, plot.argv = list(cat.dist = 0.05))
+yplot_venns(..., .title = NULL, plot.argv = list(cat.dist = 0.05), ret = FALSE)
 }
 \arguments{
 \item{...}{named params or un-named params, each represents a set to be draw, Number of params
@@ -13,6 +13,8 @@ min2 max5}
 \item{.title}{NOT implement at current}
 
 \item{plot.argv}{additional params control the plot appearance}
+
+\item{ret}{whether to return plotting data and func, default FALSE}
 }
 \description{
 Plot venn diagram for 2~5 sets

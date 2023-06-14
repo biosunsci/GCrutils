@@ -446,6 +446,7 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #'   min2 max5
 #' @param .title NOT implement at current
 #' @param plot.argv additional params control the plot appearance
+#' @param ret whether to return plotting data and func, default FALSE
 #'
 #' @return
 #' @export
@@ -453,7 +454,9 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #' @examples
 yplot_venns = function(...
                        ,.title=NULL
-                       ,plot.argv=list(cat.dist = 0.05)){
+                       ,plot.argv=list(cat.dist = 0.05)
+                       ,ret = FALSE
+                       ){
     # if parameters is not named, get the sym name of each parameter
     sets = list(...)
     if (is.null(names(sets))) {
@@ -498,7 +501,10 @@ yplot_venns = function(...
     make.custom(6,6)
     x = do.call(plot_func,args = argv)
 
-    list(plot_func=plot_func,args=argv,func_name=plot_func_name)
+    if (ret == TRUE){
+        return(list(plot_func=plot_func,args=argv,func_name=plot_func_name))
+    }
+    NULL
 }
 
 

@@ -392,6 +392,21 @@ echo = function(mat,nrowmax = 100,ncolmax=100){
     options(repr.matrix.max.rows=cur_nrow)
 }
 
+#' fill NA values in a mat, prefer to be used with pipe %>% operators
+#'
+#' can be easily placed in a pipe line %>%
+#'
+#' @param mat a matrix or data.frame
+#' @param value value to replace NA values in the mat
+#'
+#' @return mat with NA filled with value
+#' @export
+#'
+#' @examples
+fill_na = function(mat,value){
+    mat[is.na(mat)] <- value
+    mat
+}
 
 #' calculate Z-score of each row
 #'
