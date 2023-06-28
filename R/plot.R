@@ -247,6 +247,10 @@ yplot_volcano_using_de = function (diff_expr,
     else {
         de = diff_expr %>% data.frame
     }
+    if (length(logFC_threshold)==1){
+        logFC_threshold = abs(logFC_threshold)
+        logFC_threshold = c(-logFC_threshold,logFC_threshold)
+    }
     de$diffexpressed <- "NO"
     de$diffexpressed[de$log2FoldChange > logFC_threshold[2] &
                          de[[value_var]] <
