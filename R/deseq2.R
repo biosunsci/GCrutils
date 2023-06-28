@@ -157,83 +157,6 @@ ydo_count_normlization_deseq2 = function(cnt.sorted,colData.sorted){
 
 
 
-#' DiffExpr Analysis un-paired
-#'
-#' @description assert colnames(cnt.sorted)==rownames(colData.sorted)
-#'
-#' @param cnt.sorted rows are genes, columns are TSBs (Tumor Sample Barcode of samples)
-#' @param colData.sorted rows are TSBs and columns are groups, 列名至少包含['ap','g'] for
-#'   @paired=F 列名至少包含['ap','a','g'] for @paired=T
-#' @param paired Do paired test or un-paired test
-#' @param levels set compare order, the first in @levels is used as the control group.
-#' @param ...
-#'
-#' @return list named c(diff_expr,compare_order,tag_to_add,diff_expr_details)
-#' @export
-#'
-#' @examples
-ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted,paired=FALSE,levels=NULL,...){
-    if (is.null(levels)){
-        levels = colData.sorted$g %>% unique
-    }
-    colData = colData.sorted %>%
-        column_to_rownames('Tumor_Sample_Barcode') %>%
-        select(a,g) %>%
-        mutate(a=factor(a),g=factor(g,levels=levels)) %>%
-        arrange(a,g)
-
-    cnt.sorted = cnt.sorted[,row.names(colData)]
-
-    x = alist()
-    x$compare_ref_group = levels[[1]]
-    x$compare_order = rev(levels)
-    x$tag_to_add = x$compare_order %>% str_flatten(collapse = '_vs_')
-
-    if(paired==TRUE){
-        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ a + g)
-        paired_prop = 'paired'
-    }else{
-        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ g)
-        paired_prop = 'unpaired'
-    }
-    print('-------------------------------------------------------------')
-    print(paste0('Comparing > ',paired_prop,' < ',x$tag_to_add,', REF_GROUP = ',x$compare_ref_group))
-    # set control group for comparation
-    dds_paired$group <- relevel(dds_paired$g, ref = levels[[1]])
-    dds_paired <- DESeq2::DESeq(dds_paired)
-    # get result table
-    diff_expr <- as.data.frame(DESeq2::results(dds_paired)) %>%
-        mutate(abs_log2FC = abs(log2FoldChange),.before = lfcSE) %>%
-        arrange(pvalue,log2FoldChange)
-    # pack add info
-    x$cnt_table = count_table
-    x$colData = colData
-    x$diff_expr = diff_expr
-    x$paired = paired
-    # x$dds_dif_exp_matrix=ddsDifExpMatrix
-    class(x) <- c('DEA.results',class(x))
-    print('Done')
-    return (x)
-
-    # DO diff expr analysis
-    # design, the formula design, is a named vector with values is the TSB, and names is the grouping like
-    # c(余先梅='GBM',刘利新='Midline',刘杰='Midline',刘锡全='GBM',...)
-    ddsDifExpMatrix = DESeq2::DESeqDataSetFromMatrix(cnt.sorted, colData = colData.sorted, design= ~ Clin_classification)
-    stopifnot(is.factor(colData.sorted$Clin_classification))
-    lvls = levels(colData.sorted$Clin_classification)
-    lvls = lvls[1:2]
-    print(paste('Compare between',lvls %>% str_flatten(collapse = " vs "),'. NOTE: grps with more than 2 group will only compare the first 2 groups'))
-    diff_expr = ddsDifExpMatrix %>% DESeq2::DESeq() %>% DESeq2::results(contrast=c('Clin_classification',lvls))
-    x$diff_expr=diff_expr
-    # x$dds_dif_exp_matrix=ddsDifExpMatrix
-    x$compare_order=lvls
-    x$tag_to_add = lvls %>% str_flatten(collapse = '_vs_')
-    x$diff_expr_details = x$diff_expr %>% data.frame %>%
-        mutate(log2FC_abs = abs(log2FoldChange),.after = log2FoldChange) %>%
-        mutate(FC_Ins = log2FoldChange >= 0) %>%
-        arrange(desc(log2FC_abs))
-    x
-}
 
 #' Title
 #'
@@ -361,11 +284,104 @@ ydo_count_deseq2 = function(cnt
         x$normd_count = ydo_count_normlization_deseq2(count_table,colData2)
     }
     if (diff==TRUE){
-        r = ydo_count_diffexpr_deseq2(count_table,colData2)
+        r = ydo_count_diffexpr_deseq2(count_table,colData2,)
         x = utils::modifyList(x,r)
     }
     print('Done analysis.')
 
     # return
+    x
+}
+
+
+#' DiffExpr Analysis un-paired
+#'
+#' @description assert colnames(cnt.sorted)==rownames(colData.sorted)
+#'
+#' @param cnt.sorted rows are genes, columns are TSBs (Tumor Sample Barcode of samples)
+#' @param colData.sorted rows are TSBs and columns are groups, 列名至少包含['Tumor_Sample_Barcode','Clin_classification'] for
+#'   @paired=F 列名至少包含['ap','a','g'] for @paired=T
+#' @param paired Do paired test or un-paired test
+#' @param levels set compare order, the first in @levels is used as the control group.
+#' @param ...
+#'
+#' @return list named c(diff_expr,compare_order,tag_to_add,diff_expr_details)
+#' @export
+#'
+#' @examples
+ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sample_Barcode',col.group='Clin_classification',paired=FALSE,levels=NULL,...){
+    if (is.null(levels)){
+        levels = colData.sorted$g %>% unique
+    }
+    if (colData.sorted %>% has_rownames){
+        colData.sorted = colData.sorted %>% rownames_to_column(col.id)
+    }
+    sym.col.id = sym(col.id)
+    sym.col.group = sym(col.group)
+
+    if (paired==TRUE){    
+        stopifnot(colData.sorted %>% has_colnames('a'))
+        stopifnot(colData.sorted %>% has_colnames('g'))
+        colData = colData.sorted %>%
+            select(a,g) %>%
+            mutate(a=factor(a),g=factor(g,levels=levels)) %>%
+            arrange(a,g)
+    }else{
+        colData = colData.sorted %>%
+            select(sym.col.id,sym.col.group) %>%
+            mutate(g=factor(sym.col.group,levels=levels)) %>%
+            arrange(a,g)
+    }
+
+    cnt.sorted = cnt.sorted[,row.names(colData)]
+
+    x = alist()
+    x$compare_ref_group = levels[[1]]
+    x$compare_order = rev(levels)
+    x$tag_to_add = x$compare_order %>% str_flatten(collapse = '_vs_')
+
+    if(paired==TRUE){
+        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ a + g)
+        paired_prop = 'paired'
+    }else{
+        dds_paired  = DESeqDataSetFromMatrix(count_table, colData = colData, design= ~ g)
+        paired_prop = 'unpaired'
+    }
+    print('-------------------------------------------------------------')
+    print(paste0('Comparing > ',paired_prop,' < ',x$tag_to_add,', REF_GROUP = ',x$compare_ref_group))
+    # set control group for comparation
+    dds_paired$group <- relevel(dds_paired$g, ref = levels[[1]])
+    dds_paired <- DESeq2::DESeq(dds_paired)
+    # get result table
+    diff_expr <- as.data.frame(DESeq2::results(dds_paired)) %>%
+        mutate(abs_log2FC = abs(log2FoldChange),.before = lfcSE) %>%
+        arrange(pvalue,log2FoldChange)
+    # pack add info
+    x$cnt_table = count_table
+    x$colData = colData
+    x$diff_expr = diff_expr
+    x$paired = paired
+    # x$dds_dif_exp_matrix=ddsDifExpMatrix
+    class(x) <- c('DEA.results',class(x))
+    print('Done')
+    return (x)
+
+    # DO diff expr analysis
+    # design, the formula design, is a named vector with values is the TSB, and names is the grouping like
+    # c(余先梅='GBM',刘利新='Midline',刘杰='Midline',刘锡全='GBM',...)
+    ddsDifExpMatrix = DESeq2::DESeqDataSetFromMatrix(cnt.sorted, colData = colData.sorted, design= ~ Clin_classification)
+    stopifnot(is.factor(colData.sorted$Clin_classification))
+    lvls = levels(colData.sorted$Clin_classification)
+    lvls = lvls[1:2]
+    print(paste('Compare between',lvls %>% str_flatten(collapse = " vs "),'. NOTE: grps with more than 2 group will only compare the first 2 groups'))
+    diff_expr = ddsDifExpMatrix %>% DESeq2::DESeq() %>% DESeq2::results(contrast=c('Clin_classification',lvls))
+    x$diff_expr=diff_expr
+    # x$dds_dif_exp_matrix=ddsDifExpMatrix
+    x$compare_order=lvls
+    x$tag_to_add = lvls %>% str_flatten(collapse = '_vs_')
+    x$diff_expr_details = x$diff_expr %>% data.frame %>%
+        mutate(log2FC_abs = abs(log2FoldChange),.after = log2FoldChange) %>%
+        mutate(FC_Ins = log2FoldChange >= 0) %>%
+        arrange(desc(log2FC_abs))
     x
 }

@@ -307,7 +307,7 @@ yplot_volcano_using_de = function (diff_expr,
 #' @export
 #'
 #' @examples
-yinfer_group_col = function(df,raiseError=TRUE){
+yinfer_group_col = function(df,group_col=NA,raiseError=TRUE){
     col = colnames(df)
     if (is.na(group_col)) {
         if ("Group" %in% col)
