@@ -11,9 +11,7 @@ ydo_GSEA(
   maxGSSize = 500,
   p.adjust.t = 0.05,
   p.t = 0.2,
-  .lineheight = 0.75,
-  .legends.color.title = "Expression",
-  .legends.color.labels = c("Down-regulated", "Up-regulated"),
+  pvalueCutoff = 1,
   ...
 )
 }
@@ -21,22 +19,21 @@ ydo_GSEA(
 \item{gene_list}{list, gene symbols as names and `stat` or `p-value` as values, decreasing
 arranged. will overrite the diff as input}
 
-\item{set}{set in c('all','all3','gsea','hm','kegg','im','im_jnj') 'all' - all the gmt
-sets in the  refs, currently: Hallmark, KEGG, Immune, Immune2(im_jnj) 'all3' - hm, kegg,
-immune do the 3 gmt sets 'gsea' - hm, kegg do the 2 gmt sets 'hm','kegg','im','im_jnj'
-use the corresponding single gmt set}
+\item{set}{set in c('all','all3','gsea','hm','kegg','im','im_jnj') 'all' - all the gmt sets in
+the  refs, currently: Hallmark, KEGG, Immune, Immune2(im_jnj) 'all3' - hm, kegg, immune do the
+3 gmt sets 'gsea' - hm, kegg do the 2 gmt sets 'hm','kegg','im','im_jnj' use the corresponding
+single gmt set}
 
 \item{minGSSize}{will be passed to clusterProfiler::GSEA()}
 
 \item{maxGSSize}{will be passed to clusterProfiler::GSEA()}
 
-\item{p.adjust.t, p.t}{used to filter significant GSEA results from table `res.gsea@result`, p.adjust.t will be applied to p.adjust(FDR) values, and p.t will be pvalue}
+\item{p.adjust.t}{manual filter for GSEA result table, applied to FDR (`p.adjust`) column}
 
-\item{.lineheight}{yaxis label line heights}
+\item{p.t}{manual filter for GSEA result table, applied to p value (`pvalue`) column}
 
-\item{.legends.color.title}{the}
-
-\item{.legends.color.labels}{the labels of the color legend, length 2 character vector, apply to values c(-1,1)}
+\item{pvalueCutoff}{passed into  clusterProfiler::GSEA(), controls the filter of the function,set
+to 1 to avoid filter at this step.}
 
 \item{...}{will be passed to  clusterProfiler::GSEA()}
 }

@@ -41,7 +41,8 @@ Imports:
     fs (>= 1.6.1),
     tools,
     ggrepel,
-    org.Hs.eg.db
+    org.Hs.eg.db,
+    IRdisplay
 Suggests: 
     BSgenome.Hsapiens.UCSC.hg19,
     ggh4x,

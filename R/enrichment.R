@@ -8,17 +8,17 @@ npg = ggsci::pal_npg()(10)
 #'
 #' @param gene_list list, gene symbols as names and `stat` or `p-value` as values, decreasing
 #'   arranged. will overrite the diff as input
-#' @param set set in c('all','all3','gsea','hm','kegg','im','im_jnj') 'all' - all the gmt
-#'   sets in the  refs, currently: Hallmark, KEGG, Immune, Immune2(im_jnj) 'all3' - hm, kegg,
-#'   immune do the 3 gmt sets 'gsea' - hm, kegg do the 2 gmt sets 'hm','kegg','im','im_jnj'
-#'   use the corresponding single gmt set
+#' @param set set in c('all','all3','gsea','hm','kegg','im','im_jnj') 'all' - all the gmt sets in
+#'   the  refs, currently: Hallmark, KEGG, Immune, Immune2(im_jnj) 'all3' - hm, kegg, immune do the
+#'   3 gmt sets 'gsea' - hm, kegg do the 2 gmt sets 'hm','kegg','im','im_jnj' use the corresponding
+#'   single gmt set
 #' @param minGSSize will be passed to clusterProfiler::GSEA()
 #' @param maxGSSize will be passed to clusterProfiler::GSEA()
-#' @param p.adjust.t,p.t used to filter significant GSEA results from table `res.gsea@result`, p.adjust.t will be applied to p.adjust(FDR) values, and p.t will be pvalue
-#' @param .lineheight yaxis label line heights
-#' @param .legends.color.title the
-#' @param .legends.color.labels the labels of the color legend, length 2 character vector, apply to values c(-1,1)
 #' @param ... will be passed to  clusterProfiler::GSEA()
+#' @param p.adjust.t manual filter for GSEA result table, applied to FDR (`p.adjust`) column
+#' @param p.t manual filter for GSEA result table, applied to p value (`pvalue`) column
+#' @param pvalueCutoff passed into  clusterProfiler::GSEA(), controls the filter of the function,set
+#'   to 1 to avoid filter at this step.
 #'
 #' @return a list obj of class 'y.GO.res', used for input for yplot_GO_res
 #' @export
@@ -30,12 +30,8 @@ ydo_GSEA = function (gene_list = NULL,
                      maxGSSize = 500,
                      p.adjust.t = 0.05,
                      p.t = 0.2,
-                     .lineheight = 0.75,
-                     .legends.color.title = 'Expression',
-                     .legends.color.labels = c('Down-regulated','Up-regulated'),
+                     pvalueCutoff = 1,
                      ...) {
-    npg = ggsci::pal_npg()(10)[2:1]
-    .T_ylab_wrap = 40
     refs = list(
         hm = c(figureTitle = "Hallmark Enrichment",
                Name = "Hallmark"),
@@ -87,197 +83,33 @@ ydo_GSEA = function (gene_list = NULL,
         res.tb.gsea = res.gsea@result %>%
             dplyr::filter(p.adjust < p.adjust.t, pvalue < p.t)
         n.res = res.tb.gsea %>% nrow
+
         print(paste("after filter,", n.res, "significant results left"))
         if (n.res > 0) {
-            res.tb.gsea %<>% mutate(
-                Description = forcats::fct_reorder(Description,
-                                                   p.adjust, .desc = TRUE),
-                EnrichedGeneNum = core_enrichment %>%
-                    str_split("/") %>% sapply(length),
-                direction = factor(
-                    sign(NES),
-                    levels = c(-1, 1),
-                    labels = c("DEC Genes", "INS Genes")
-                ),
-                EnrichedPer = round(EnrichedGeneNum /
-                                        setSize *
-                                        100)
-            ) %>% dplyr::select(!core_enrichment)
-            tab = res.tb.gsea %>% dplyr::select(Description,
-                                                EnrichedGeneNum, EnrichedPer)
-            maxlen_ylabel = res.tb.gsea$ID %>% sapply(str_length) %>% max
-            if (maxlen_ylabel > .T_ylab_wrap) {
-                ylabel_size = 10
-                height_ratio = 1 + 0.15 * (maxlen_ylabel %/% .T_ylab_wrap)
-                maxlen_ylabel = .T_ylab_wrap
-            }
-            else {
-                ylabel_size = 14
-                height_ratio = 1
-            }
-            w = ceiling((maxlen_ylabel / 10 + 7) * 2) / 2
-            h = ((round(min(
-                30, n.res
-            ) / 4 + 3) * height_ratio) *
-                2) / 2
-            gg.gsea = res.tb.gsea %>% head(30) %>%
-                ggplot(aes(
-                    x = -log10(pvalue),
-                    y = Description,
-                    color = direction
-                )) +
-                geom_point(aes(size = EnrichedPer),
-                           alpha = 0.75) +
-                scale_shape_manual(values = c(15,
-                                              16, 17, 18)) +
-                scale_color_manual(breaks = .legends.color.labels,
-                                   values = npg) +
-                ylab(NULL) +
-                ggtitle(figureTitle) +
-                theme_bw(base_size = 16) +
-                theme(axis.text.y.left =
-                          element_text(size = ylabel_size,
-                                       lineheight = .lineheight)) +
-                scale_y_discrete(
-                    position = "left",
-                    labels = function(x)
-                        str_wrap(str_replace_all(x, fixed("_"), " "), width = maxlen_ylabel)
-                ) +
-                guides(
-                    y.sec = ggh4x::guide_axis_manual(
-                        breaks = tab$Description,
-                        labels = paste0(tab$EnrichedGeneNum, "(", tab$EnrichedPer,
-                                        "%)")
-                    ),
-                    size = guide_legend(title = "Enriched%"),
-                    color = guide_legend(title = .legends.color.title)
-                )
-            make.custom(w, h)
-            figure_size = c(w, h)
-            res[[key]] = list(
-                gsea.set = Name,
-                gene_list = gene_list,
-                res.gsea = res.gsea,
-                tb.gsea = res.tb.gsea,
-                gg = gg.gsea,
-                figsize = figure_size,
-                w = w,
-                h = h,
-                height_ratio = height_ratio,
-                maxlen_ylabel = maxlen_ylabel
-            )
+            res.tb.gsea
         }
         else {
-            print(
-                paste0(
-                    "[!] Handling ",
-                    key,
-                    ": too less res got after filtering, consider to increase @p.adjust.t"
-                )
-            )
-            res[[key]] = list(
-                gsea.set = Name,
-                gene_list = gene_list,
-                res.gsea = res.gsea,
-                res.tb.gsea = res.tb.gsea,
-                gg = ggplot(),
-                figsize = c(6,6)
-            )
+            print(paste0(
+                "[!] Handling ",  key,
+                ": too less res got after filtering, consider to increase @p.adjust.t and @p.t"))
         }
+        res[[key]] = list(
+            gsea.set = Name,
+            gene_list = gene_list,
+            res.gsea = res.gsea,
+            res.tb.gsea = res.tb.gsea,
+            p.adjust.t = p.adjust.t,
+            p.t = p.t,
+            pvalueCutoff = pvalueCutoff,
+            minGSSize = 10,
+            maxGSSize = 500
+        )
+        attr(res[[key]], 'class') = c('y.GSEA.res',class(res[[key]]))
     }
-    attr(res, 'class') = c(class(res), 'y.GSEA.res')
+    attr(res, 'class') = c('y.GSEA.resx',class(res))
     message("GSEA analysis done, now you can use yplot_")
     res
 }
-
-#' Title
-#'
-#' @param res
-#' @param .lineheight
-#' @param .T_ylab_wrap the width of left y-axis labels
-#' @param .legends.color.title
-#' @param .legends.color.labels
-#' @param ...
-#' @param .TOP plot top N features
-#'
-#' @return
-#' @export
-#'
-#' @examples
-yplot_GSEA_res = function(res,
-                          .TOP = 30,
-                          figureTitle = 'GSEA of DEGs',
-                          .lineheight = 0.75,
-                          .T_ylab_wrap = 40,
-                          .legends.color.title = 'Expression',
-                          .legends.color.labels = c('Down-regulated','Up-regulated'),
-                          ...){
-    stopifnot('y.GSEA.res' %in% class(res))
-    res2 = list()
-    for (key in names(res)) {
-        res.gsea = res[[key]]
-        res.tb.gsea = res[[key]]$res.tb.gsea
-
-        tab = res.tb.gsea %>% dplyr::select(Description,
-                                            EnrichedGeneNum, EnrichedPer)
-        maxlen_ylabel = res.tb.gsea$ID %>% sapply(str_length) %>% max
-        if (maxlen_ylabel > .T_ylab_wrap) {
-            ylabel_size = 10
-            height_ratio = 1 + 0.15 * (maxlen_ylabel %/% .T_ylab_wrap)
-            maxlen_ylabel = .T_ylab_wrap
-        }
-        else {
-            ylabel_size = 14
-            height_ratio = 1
-        }
-        w = ceiling((maxlen_ylabel / 10 + 7) * 2) / 2
-        h = ((round(min(30, n.res) / 4 + 3) * height_ratio) *2) / 2
-        gg.gsea = res.tb.gsea %>% head(.TOP) %>%
-            ggplot(aes(
-                x = -log10(pvalue),
-                y = Description,
-                color = direction
-            )) +
-            geom_point(aes(size = EnrichedPer),
-                       alpha = 0.75) +
-            scale_shape_manual(values = c(15,
-                                          16, 17, 18)) +
-            scale_color_manual(breaks = .legends.color.labels,
-                               values = npg) +
-            ylab(NULL) +
-            ggtitle(figureTitle) +
-            theme_bw(base_size = 16) +
-            theme(axis.text.y.left =
-                      element_text(size = ylabel_size,
-                                   lineheight = .lineheight)) +
-            scale_y_discrete(
-                position = "left",
-                labels = function(x)
-                    str_wrap(str_replace_all(x, fixed("_"), " "), width = maxlen_ylabel)
-            ) +
-            guides(
-                y.sec = ggh4x::guide_axis_manual(
-                    breaks = tab$Description,
-                    labels = paste0(tab$EnrichedGeneNum, "(", tab$EnrichedPer,
-                                    "%)")
-                ),
-                size = guide_legend(title = "Enriched%"),
-                color = guide_legend(title = .legends.color.title)
-            )
-        figure_size = c(w, h)
-        res2[[key]] = list(
-            gg = gg.gsea,
-            tb.data = res.tb.gsea,
-            w = w,
-            h = h,
-            figsize = figure_size,
-            maxlen_ylabel = maxlen_ylabel
-        )
-    }
-    attr(res2, 'class') = c(class(res2), 'y.GSEA.plots')
-    res2
-}
-
 
 #'
 #' Do GO analysis using different expression results
