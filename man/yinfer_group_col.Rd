@@ -4,7 +4,7 @@
 \alias{yinfer_group_col}
 \title{guess group column name in the data.frame}
 \usage{
-yinfer_group_col(df, raiseError = TRUE)
+yinfer_group_col(df, group_col = NA, raiseError = TRUE)
 }
 \arguments{
 \item{df}{}

@@ -5,22 +5,19 @@
 \title{GSEA analysis using different expression results}
 \usage{
 ydo_GSEA(
-  diff = NULL,
   gene_list = NULL,
   set = "gsea",
-  pvalueCutoff = 0.2,
-  p.adjust.t = 0.05,
-  p.t = 1,
   minGSSize = 10,
   maxGSSize = 500,
+  p.adjust.t = 0.05,
+  p.t = 0.2,
   .lineheight = 0.75,
+  .legends.color.title = "Expression",
+  .legends.color.labels = c("Down-regulated", "Up-regulated"),
   ...
 )
 }
 \arguments{
-\item{diff}{a data.frame which is a output df of DESeq2 different expr analysis output, with
-columns: symbol, log2FC, pvalue, padj, stat}
-
 \item{gene_list}{list, gene symbols as names and `stat` or `p-value` as values, decreasing
 arranged. will overrite the diff as input}
 
@@ -29,13 +26,19 @@ sets in the  refs, currently: Hallmark, KEGG, Immune, Immune2(im_jnj) 'all3' - h
 immune do the 3 gmt sets 'gsea' - hm, kegg do the 2 gmt sets 'hm','kegg','im','im_jnj'
 use the corresponding single gmt set}
 
-\item{p.adjust.t}{padj threshold, default 0.05}
+\item{minGSSize}{will be passed to clusterProfiler::GSEA()}
 
-\item{p.t}{pvalue threshold, default 0.01}
+\item{maxGSSize}{will be passed to clusterProfiler::GSEA()}
 
-\item{...}{}
+\item{p.adjust.t, p.t}{used to filter significant GSEA results from table `res.gsea@result`, p.adjust.t will be applied to p.adjust(FDR) values, and p.t will be pvalue}
 
-\item{log2fc.abs.t}{log2FC threshold, default 1}
+\item{.lineheight}{yaxis label line heights}
+
+\item{.legends.color.title}{the}
+
+\item{.legends.color.labels}{the labels of the color legend, length 2 character vector, apply to values c(-1,1)}
+
+\item{...}{will be passed to  clusterProfiler::GSEA()}
 }
 \value{
 a list obj of class 'y.GO.res', used for input for yplot_GO_res
