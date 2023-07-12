@@ -12,6 +12,9 @@ yplot_GO_res(
   ...
 )
 }
+\value{
+an y.GO.res.plot object, list(plot.tb = data.tb, gg = gg.go, figsize = figure_size, w = w,
+}
 \description{
 Plot the res obj of ydo_GO*
 }

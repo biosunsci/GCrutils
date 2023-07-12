@@ -15,7 +15,7 @@ yloop(x, func)
 3: func(value,key,index)}
 }
 \value{
-None
+Nothing is returned
 }
 \description{
 apply func over a list x

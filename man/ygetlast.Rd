@@ -15,6 +15,9 @@ ygetlast(.obj, keys = NULL, .squeeze = FALSE, .retmode = "list")
 
 \item{.retmode}{in c('list','squeeze'), 'list' is default}
 }
+\value{
+last object in list .obj
+}
 \description{
 Get the last element which match the keys, of an iterable, like ypop, but do not change .obj,
 *** Usually used for screening out unused arguments passed by ... in a function ***

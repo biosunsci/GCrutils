@@ -13,6 +13,9 @@ make.custom(w, h = NULL, .set_global = TRUE)
 
 \item{.set_global}{TRUE, set global vars, else no global variables set}
 }
+\value{
+Nothing is returned
+}
 \description{
 basically, this function affects the following plot function which will use global var WIDTH and HEIGHT
   to determine the display repr.plot.width and repr.plot.height, set global variables depend on the third parameter

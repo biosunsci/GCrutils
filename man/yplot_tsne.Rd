@@ -13,6 +13,7 @@ yplot_tsne(
   add_polygon = FALSE,
   perplexity = NA,
   dims = 2,
+  .ret = FALSE,
   ...
 )
 }
@@ -20,6 +21,9 @@ yplot_tsne(
 \item{normd}{data.fram or matrix, only columns will be preserved, rows will be ruduced in dimensions}
 
 \item{...}{}
+}
+\value{
+if .ret==TRUE return res object else Nothing is returned
 }
 \description{
 t-SNE analysis for mat

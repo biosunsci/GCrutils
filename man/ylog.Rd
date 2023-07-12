@@ -15,6 +15,9 @@ ylog(..., verbose = TRUE, .addtime = TRUE, .dev = 2)
 
 \item{.dev}{in [1,2] default 2(stderr), .dev==2 mean stderr, .dev==1 means stdout}
 }
+\value{
+Nothing is returned
+}
 \description{
 Log messages with timestamps to the stdout or stderr
 }

@@ -9,6 +9,9 @@ yinfer_group_col(df, group_col = NA, raiseError = TRUE)
 \arguments{
 \item{df}{}
 }
+\value{
+colnames vector
+}
 \description{
 guess group column name in the data.frame
 }

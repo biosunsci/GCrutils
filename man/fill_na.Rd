@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{fill_na}
 \alias{fill_na}
-\title{fill NA values in a mat, prefer to be used with pipe %>% operators}
+\title{fill NA values in a mat, prefer to be used with pipe \%>\% operators}
 \usage{
 fill_na(mat, value)
 }
@@ -15,5 +15,5 @@ fill_na(mat, value)
 mat with NA filled with value
 }
 \description{
-can be easily placed in a pipe line %>%
+can be easily placed in a pipe line \%>\%
 }

@@ -4,10 +4,21 @@
 \alias{yplot_venns_bydf}
 \title{Title}
 \usage{
-yplot_venns_bydf(df, id_col, group_col = "Clin_classification", ...)
+yplot_venns_bydf(
+  df,
+  id_col,
+  group_col = "Clin_classification",
+  .ret = FALSE,
+  ...
+)
 }
 \arguments{
-\item{...}{}
+\item{df}{}
+
+\item{.ret}{if TRUE return the res object}
+}
+\value{
+if .ret==TRUE return the res object else nothing is returned
 }
 \description{
 Title

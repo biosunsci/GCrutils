@@ -14,6 +14,9 @@ ygenerate_annotation_colors(
 \arguments{
 \item{show_all_ggsci_palette}{}
 }
+\value{
+list of colors
+}
 \description{
 Generate color palette for annotation
 }

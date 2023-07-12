@@ -7,7 +7,7 @@
 #' @param init
 #' @param ...
 #'
-#' @return
+#' @return reduce results
 #'
 #' @examples
 reduce = function(x,f,init,...){
@@ -25,7 +25,7 @@ reduce = function(x,f,init,...){
 #' @param .addtime add timestamp at the front when print
 #' @param .dev in [1,2] default 2(stderr), .dev==2 mean stderr, .dev==1 means stdout
 #'
-#' @return NULL
+#' @return Nothing is returned
 #' @export
 #'
 #' @examples
@@ -143,7 +143,7 @@ ypush = function(iter, ..., .expand=TRUE,.as.whole=FALSE) {
 #' 2: func(value,key)
 #' 3: func(value,key,index)
 #'
-#' @return None
+#' @return Nothing is returned
 #' @export
 #'
 #' @examples
@@ -175,7 +175,7 @@ yloop = function(x,func){
 #' @param .squeeze boolean,  .squeeze = T equals .retmode == 'squeeze'
 #' @param .retmode in c('list','squeeze'), 'list' is default
 #'
-#' @return
+#' @return last object in list .obj
 #' @export
 #'
 #' @examples
@@ -392,9 +392,9 @@ echo = function(mat,nrowmax = 100,ncolmax=100){
     options(repr.matrix.max.rows=cur_nrow)
 }
 
-#' fill NA values in a mat, prefer to be used with pipe %>% operators
+#' fill NA values in a mat, prefer to be used with pipe \%>\% operators
 #'
-#' can be easily placed in a pipe line %>%
+#' @description  can be easily placed in a pipe line \%>\%
 #'
 #' @param mat a matrix or data.frame
 #' @param value value to replace NA values in the mat
@@ -578,7 +578,7 @@ yload_symbols_cancer_related_genes_1190 = function(){
 #' @param ignore.whitespace logical. Ignore leading and tailing whitespace characters before
 #'   assessing if the vector can be converted to numeric. Default value is TRUE. (Optional)
 #'
-#' @return
+#' @return vector which could be safely as.numeric \?
 #' @export
 #'
 #' @examples
@@ -704,7 +704,7 @@ check.numeric = function(v = NULL, na.rm = FALSE, only.integer = FALSE,
 #' @param h set global HEIGHT, in inch
 #' @param .set_global TRUE, set global vars, else no global variables set
 #'
-#' @return
+#' @return Nothing is returned
 #' @export
 #'
 #' @examples
@@ -730,7 +730,7 @@ make.custom = function (w, h=NULL, .set_global = TRUE) {
 #'
 #' @param .set_global
 #'
-#' @return
+#' @return Nothing is returned
 #' @export
 #'
 #' @examples
@@ -772,7 +772,7 @@ make.wide = function(.set_global=TRUE){
 #' @param palette
 #' @param show_all_ggsci_palette
 #'
-#' @return
+#' @return list of colors
 #' @export
 #'
 #' @examples

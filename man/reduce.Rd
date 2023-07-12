@@ -9,6 +9,9 @@ reduce(x, f, init, ...)
 \arguments{
 \item{...}{}
 }
+\value{
+reduce results
+}
 \description{
 same as Reduce except for x,f position exchanged for compilable with pipe op %>%
 }

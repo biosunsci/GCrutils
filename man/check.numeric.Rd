@@ -27,6 +27,9 @@ be converted to numeric. (Optional)}
 \item{ignore.whitespace}{logical. Ignore leading and tailing whitespace characters before
 assessing if the vector can be converted to numeric. Default value is TRUE. (Optional)}
 }
+\value{
+vector which could be safely as.numeric \?
+}
 \description{
 A function to assess if a vector can be interpreted as numbers. Code copied from
   varhandle::check.numeric.

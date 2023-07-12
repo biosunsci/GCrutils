@@ -8,27 +8,32 @@
 #' @param scale default 'auto', use [yscale_rows()] to standardize each rows
 #' @param by_group if colData provided
 #' @param params_top_annotation plotting params to draw top annotation
-#' @param cluster_rows pass to [ComplexHeatmap::Heatmap()]
-#' @param cluster_columns pass to [ComplexHeatmap::Heatmap()]
-#' @param clustering_method_columns pass to [ComplexHeatmap::Heatmap()]
-#' @param clustering_method_rows pass to [ComplexHeatmap::Heatmap()]
-#' @param name pass to [ComplexHeatmap::Heatmap()]
-#' @param row_title pass to [ComplexHeatmap::Heatmap()]
-#' @param show_row_dend pass to [ComplexHeatmap::Heatmap()]
-#' @param show_column_dend pass to [ComplexHeatmap::Heatmap()]
-#' @param show_row_names pass to [ComplexHeatmap::Heatmap()]
-#' @param show_column_names pass to [ComplexHeatmap::Heatmap()]
+#' @param cluster_rows pass to ComplexHeatmap::Heatmap()
+#' @param cluster_columns pass to ComplexHeatmap::Heatmap()
+#' @param clustering_method_columns pass to ComplexHeatmap::Heatmap()
+#' @param clustering_method_rows pass to ComplexHeatmap::Heatmap()
+#' @param name pass to ComplexHeatmap::Heatmap()
+#' @param row_title pass to ComplexHeatmap::Heatmap()
+#' @param show_row_dend pass to ComplexHeatmap::Heatmap()
+#' @param show_column_dend pass to ComplexHeatmap::Heatmap()
+#' @param show_row_names pass to ComplexHeatmap::Heatmap()
+#' @param show_column_names pass to ComplexHeatmap::Heatmap()
 #' @param color in format 'Num1~Num2',default '-2~2', will be converted to [circlize::colorRamp()] function then pass to
-#'   [ComplexHeatmap::Heatmap()] as col. if the two Nums span 0, then 0 will be inserted into the middle
+#'   ComplexHeatmap::Heatmap() as col. if the two Nums span 0, then 0 will be inserted into the middle
 #'   ELSE you can provide a custom [circlize::colorRamp()] object
-#' @param column_split pass to [ComplexHeatmap::Heatmap()]
-#' @param heatmap_legend_param pass to [ComplexHeatmap::Heatmap()]
-#' @param ... other legal params pass to [ComplexHeatmap::Heatmap()]
+#' @param column_split pass to ComplexHeatmap::Heatmap()
+#' @param heatmap_legend_param pass to ComplexHeatmap::Heatmap()
+#' @param ... other legal params pass to ComplexHeatmap::Heatmap()
 #'
-#' @return list
+#' @return list with ggplot obj, ComplexHeatmap object and other parameters' values
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#'
+#'     mat = matrix(1:12,nrow=4)
+#' }
+#'
 yplot_heatmap = function(
         mat
         ,colData = NULL
@@ -58,7 +63,7 @@ yplot_heatmap = function(
 
     if (is.null(colData)){
         .ha = NULL
-        if (by_group == TRUE){
+        if (by_group != FALSE){
             by_group = FALSE
             print('colData is None, set by_group = FALSE')
         }
@@ -83,8 +88,8 @@ yplot_heatmap = function(
         }
 
         colData %<>% mutate(across(!where(is.factor),factor))
-
         .group = ydeframe(colData)
+
         if (!is.null(annotation_colors) && !is.na(annotation_colors)){
             .group$col = annotation_colors
         }
@@ -97,6 +102,9 @@ yplot_heatmap = function(
 
     if (by_group==TRUE){
         .column_split = .group[[1]]
+    }else if (is.character(by_group)){
+        stopifnot(by_group %in% names(.group))
+        .column_split = .group[[by_group]]
     }else{
         .column_split = column_split
     }
@@ -307,7 +315,7 @@ yplot_volcano_using_de = function (diff_expr,
 #'
 #' @param df
 #'
-#' @return
+#' @return colnames vector
 #' @export
 #'
 #' @examples
@@ -339,13 +347,13 @@ yinfer_group_col = function(df,group_col=NA,raiseError=TRUE){
 #' @param dims
 #' @param ...
 #'
-#' @return
+#' @return if .ret==TRUE return res object else Nothing is returned
 #' @export
 #'
 #' @examples
 yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, color_col = NULL,
                        add_label = FALSE, add_polygon=FALSE,
-                       perplexity = NA, dims = 2, ...) {
+                       perplexity = NA, dims = 2, .ret=FALSE, ...) {
     if (is.null(mat)) {
         mat = t(normd)
         pids = colnames(normd)
@@ -383,7 +391,9 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, color_col = NUL
                      lwd = 0.5)
     }
     res$gg = gg
-    res
+    if (.ret==TRUE){
+        return(res)
+    }
 }
 
 
@@ -450,16 +460,17 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #'   min2 max5
 #' @param .title NOT implement at current
 #' @param plot.argv additional params control the plot appearance
-#' @param ret whether to return plotting data and func, default FALSE
+#' @param .ret default FALSE, whether to return plotting data and func, default FALSE
 #'
-#' @return
+#' @return if .ret==TRUE return list(plot_func=plot_func,args=argv,func_name=plot_func_name) else
+#'   nothing is returned
 #' @export
 #'
 #' @examples
 yplot_venns = function(...
                        ,.title=NULL
                        ,plot.argv=list(cat.dist = 0.05)
-                       ,ret = FALSE
+                       ,.ret = FALSE
                        ){
     # if parameters is not named, get the sym name of each parameter
     sets = list(...)
@@ -508,22 +519,21 @@ yplot_venns = function(...
     if (ret == TRUE){
         return(list(plot_func=plot_func,args=argv,func_name=plot_func_name))
     }
-    NULL
 }
 
 
 #' Title
 #'
+#' @param id_col
+#' @param group_col
+#' @param .ret if TRUE return the res object
 #' @param df
-#' @param sel_col
-#' @param export
-#' @param ...
 #'
-#' @return
+#' @return if .ret==TRUE return the res object else nothing is returned
 #' @export
 #'
 #' @examples
-yplot_venns_bydf = function (df,id_col, group_col='Clin_classification',  ...) {
+yplot_venns_bydf = function (df,id_col, group_col='Clin_classification', .ret=FALSE, ...) {
     # my_list <- lapply(unique(df[[group_col]]), function(x) {
     #     df[[id_col]][df[[group_col]] == x]
     # })
@@ -538,7 +548,9 @@ yplot_venns_bydf = function (df,id_col, group_col='Clin_classification',  ...) {
         {setNames(.$values, .[[group_col]])}
 
     res = yplot_venns %>% do.call(my_list)
-    res
+    if (.ret == TRUE){
+        return(res)
+    }
 }
 
 # ------------- PLOT Enrichment ---------------------
@@ -550,7 +562,8 @@ yplot_venns_bydf = function (df,id_col, group_col='Clin_classification',  ...) {
 #' @param ggsci_col_scheme
 #' @param ...
 #' @import ggplot2
-#' @return
+#' @return an y.GO.res.plot object, list(plot.tb = data.tb, gg = gg.go, figsize = figure_size, w = w,
+#  h = h, height_ratio = height_ratio, maxlen_ylabel = maxlen_ylabel)
 #' @export
 #'
 #' @examples
@@ -676,7 +689,7 @@ yplot_GO_res = function(go.res, go.tb.filter='top10',.T_ylab_wrap = 50,ggsci_col
 #'   of FDR and pvalue thresholds, set the parameters to Non-NULL values
 #' @param figureTitle
 #'
-#' @return
+#' @return an y.GSEA.plots object
 #' @export
 #'
 #' @examples

@@ -9,6 +9,9 @@ ygen_set_color_scheme(name = "wjw")
 \arguments{
 \item{name}{}
 }
+\value{
+list of colors
+}
 \description{
 Title
 }

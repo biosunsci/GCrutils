@@ -37,6 +37,9 @@ of FDR and pvalue thresholds, set the parameters to Non-NULL values}
 \item{.legends.color.labels}{the labels of the color legend, length 2 character vector, apply to
 values c(-1,1)}
 }
+\value{
+an y.GSEA.plots object
+}
 \description{
 add plots to y.GSEA.resx objects
 }

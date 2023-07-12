@@ -2,7 +2,7 @@
 #'
 #' @param name
 #'
-#' @return
+#' @return list of colors
 #' @export
 #'
 #' @examples

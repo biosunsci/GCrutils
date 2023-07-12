@@ -9,6 +9,9 @@ make.tall(.set_global = TRUE)
 \arguments{
 \item{.set_global}{}
 }
+\value{
+Nothing is returned
+}
 \description{
 Title
 }

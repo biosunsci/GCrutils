@@ -41,39 +41,46 @@ colData will be draw at the top annotation of Heatmap, each column a line}
 
 \item{params_top_annotation}{plotting params to draw top annotation}
 
-\item{cluster_rows}{pass to [ComplexHeatmap::Heatmap()]}
+\item{cluster_rows}{pass to ComplexHeatmap::Heatmap()}
 
-\item{cluster_columns}{pass to [ComplexHeatmap::Heatmap()]}
+\item{cluster_columns}{pass to ComplexHeatmap::Heatmap()}
 
-\item{clustering_method_columns}{pass to [ComplexHeatmap::Heatmap()]}
+\item{clustering_method_columns}{pass to ComplexHeatmap::Heatmap()}
 
-\item{clustering_method_rows}{pass to [ComplexHeatmap::Heatmap()]}
+\item{clustering_method_rows}{pass to ComplexHeatmap::Heatmap()}
 
-\item{name}{pass to [ComplexHeatmap::Heatmap()]}
+\item{name}{pass to ComplexHeatmap::Heatmap()}
 
-\item{row_title}{pass to [ComplexHeatmap::Heatmap()]}
+\item{row_title}{pass to ComplexHeatmap::Heatmap()}
 
-\item{show_row_dend}{pass to [ComplexHeatmap::Heatmap()]}
+\item{show_row_dend}{pass to ComplexHeatmap::Heatmap()}
 
-\item{show_column_dend}{pass to [ComplexHeatmap::Heatmap()]}
+\item{show_column_dend}{pass to ComplexHeatmap::Heatmap()}
 
-\item{show_row_names}{pass to [ComplexHeatmap::Heatmap()]}
+\item{show_row_names}{pass to ComplexHeatmap::Heatmap()}
 
-\item{show_column_names}{pass to [ComplexHeatmap::Heatmap()]}
+\item{show_column_names}{pass to ComplexHeatmap::Heatmap()}
 
 \item{color}{in format 'Num1~Num2',default '-2~2', will be converted to [circlize::colorRamp()] function then pass to
-[ComplexHeatmap::Heatmap()] as col. if the two Nums span 0, then 0 will be inserted into the middle
+ComplexHeatmap::Heatmap() as col. if the two Nums span 0, then 0 will be inserted into the middle
 ELSE you can provide a custom [circlize::colorRamp()] object}
 
-\item{column_split}{pass to [ComplexHeatmap::Heatmap()]}
+\item{column_split}{pass to ComplexHeatmap::Heatmap()}
 
-\item{heatmap_legend_param}{pass to [ComplexHeatmap::Heatmap()]}
+\item{heatmap_legend_param}{pass to ComplexHeatmap::Heatmap()}
 
-\item{...}{other legal params pass to [ComplexHeatmap::Heatmap()]}
+\item{...}{other legal params pass to ComplexHeatmap::Heatmap()}
 }
 \value{
-list
+list with ggplot obj, ComplexHeatmap object and other parameters' values
 }
 \description{
 Plot heatmap using ComplexHeatmap
+}
+\examples{
+\dontrun{
+
+    mat = matrix(1:12,nrow=4)
+}
+
 }
