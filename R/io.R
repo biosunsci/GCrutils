@@ -106,7 +106,7 @@ yload_dfx = function(li = NULL,
                 } else if(myfrm[[1]] %in% c('.')){
                     myfrm = c(frm, myfrm) %>% str_flatten(collapse = '/') %>% str_replace(fixed('/./'),'/')
                 } else{
-                    myfrm = myfrm
+                    myfrm = myfrm %>% str_flatten(collapse = '/')
                 }
             } else{
                 stop("item in @li is wrong")

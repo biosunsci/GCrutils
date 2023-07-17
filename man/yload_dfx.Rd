@@ -2,7 +2,7 @@
 % Please edit documentation in R/io.R
 \name{yload_dfx}
 \alias{yload_dfx}
-\title{Load data.frame sheet from files}
+\title{Load files into data.table or list of data.tables}
 \usage{
 yload_dfx(
   li = NULL,
@@ -45,7 +45,8 @@ fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname
 df or list of dfs if retmode=='local', assign every df to .GlobalEnv if retmode=='global'
 }
 \description{
-Load data.frame sheet from files
+use xlsx/openxlsx to load xls, xlsx and use data.table::fread to read plain text
+  format tables like tsv,csv,txt,dfx,etc.
 }
 \details{
 依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` &&
