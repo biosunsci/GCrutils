@@ -9,10 +9,10 @@ yload_dfx(
   frm = INPUTROOT,
   pattern = NULL,
   fextname = NULL,
+  engine = "auto",
   worker = NULL,
   retmode = "local",
-  verbose = TRUE,
-  row.names = NULL,
+  verbosing = TRUE,
   sheet_name = 1,
   ...
 )

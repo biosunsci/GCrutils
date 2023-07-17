@@ -63,25 +63,43 @@ yload_dfx = function(li = NULL,
                      frm = INPUTROOT,
                      pattern = NULL,
                      fextname = NULL,
+                     engine = 'auto',
                      worker = NULL,
                      retmode = 'local',
-                     verbose = TRUE,
-                     row.names = NULL,
+                     verbosing = TRUE,
                      sheet_name = 1,
                      ...) {
     # retmode in c('local','global')
     # fextname in c(str, NULL)
     # default parameters with custom one
-    default_load_func = data.table::fread
+    user_args = yfunc_args()
+    if (engine=='auto'){
+        ns = names(user_args)
+        if (length(intersect(c("row.names",'comment.char','fileEncoding'),ns))>0){
+            default_load_func = utils::read.table
+        } else if (length(intersect(c("skip",'sep2','select','drop'),ns))>0){
+            default_load_func = data.table::fread
+        }else{
+            default_load_func = data.table::fread
+        }
+    }else if (engine == 'fread'){
+        default_load_func = data.table::fread
+    }else if(engine == 'read.table'){
+        default_load_func = utils::read.table
+    }else{
+        stopifnot(is.function(engine))
+    }
     std_args = yfunc_args(default_load_func)
     argv = list(
         sep = "\t",
-        header = TRUE,
         quote = "",
-        # comment.char = "",
         na.strings = "",
-        row.names = row.names
-    ) %>% utils::modifyList(yfunc_args(), keep.null = TRUE) %>% ysubset_list_named(std_args)
+        check.names = FALSE,
+        strip.white = TRUE,
+        fill = FALSE,
+        blank.lines.skip = FALSE,
+        stringsAsFactors = FALSE
+    ) %>% utils::modifyList(user_args, keep.null = TRUE) %>% ysubset_list_named(std_args)
 
     if ( length(intersect(c('data.frame', 'data.table', 'matrix'), class(li))) > 0 )
         return(li)
@@ -157,7 +175,7 @@ yload_dfx = function(li = NULL,
 
         input = yfile_path(myfrm, ffname)
 
-        if (verbose == TRUE)
+        if (verbosing == TRUE)
             ylog("read [", ffname , "] as '", vname, "' from > ", myfrm)
 
         if (fextname == 'gmt') {
