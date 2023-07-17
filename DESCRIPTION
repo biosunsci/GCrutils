@@ -22,6 +22,7 @@ Depends:
     grDevices,
     ggfortify
 Imports:
+    data.table,
     scales (>= 1.2.1),
     ggfortify (>= 0.4.15),
     ggsci (>= 2.9),

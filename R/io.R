@@ -19,21 +19,33 @@ tryCatch(
 
 # ------------- IO ---------------------
 
-#' Load data.frame sheet from files
+#' Load files into data.table or list of data.tables
 #'
-#' @details 依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `fextname` both NULL
-#'   and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT, yfunc_args, read.table, %>%,
-#'   modifyList, yslice, str_flatten, str_detect, fixed, ypush, str_sub, ypath_join
+#' @description use xlsx/openxlsx to load xls, xlsx and use data.table::fread to read plain text
+#'   format tables like tsv,csv,txt,dfx,etc.
 #'
-#' @param li overwritting <pattern> settings a character vector, if length(<li>)>1 generate a named list else generate
-#'   the dataframe read, return is determined further by <retmode> a character vector whose element <i> refers to dfx
-#'   names, if <i> is not started with c('/','~','./'), find <i>.<fextname> in folder <frm> else use <i> as the path, ignore
-#'   <frm> for the current <i> if input li is a data.frame it will be returned immediately
+#' @details 依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` &&
+#'   `fextname` both NULL and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT,
+#'   yfunc_args, read.table, %>%, modifyList, yslice, str_flatten, str_detect, fixed, ypush,
+#'   str_sub, ypath_join
+#'
+#' @param li A character vector, whose element <i> will be interpretated as the value of  dfx names,
+#'   if <i> starts with c('/','~','../'), find `<i>.<fextname>` in the root ('/'), home ('~') or
+#'   parent ('../') folder. if <i> is a file name with no path info (like 'abc.txt' or 'abc'), then
+#'   file <i> will be search in the <frm> folder. if <i> contains a folder level, (like 'abc/tmp',
+#'   'report/abc.txt'), ignore <frm> for the current <i>, search files in the <i> given folder.
+#'   NOTE: If you want to refer to the files in the subfolder in the <frm> path, add './' in the
+#'   beginning of the <i>: if `frm = 'export', li = 'folder/data.txt'`, search the data.txt in the
+#'   current folder (`./folder/data.txt` is searched), `frm = 'export', li = './folder/data.txt'`,
+#'   search data.txt in the <frm> folder (`./export/folder/data.txt` is searched). if input li is a
+#'   data.frame, a matrix, or a data.table, it will be returned as it is. `li` Overwrites <pattern>
+#'   settings, if `length(<li>) > 1` generate a named list, else generate the data.frame read.
+#'   Returned value is determined further by <retmode>.
 #' @param frm a folder.path, all the data will be read from this path
 #' @param pattern a RegExpr to glob, return matched files, only acts when `li` is NULL
-#' @param fextname basicly, <li> members do not include an extention name, fextname is used to set the <li> extention name. set
-#'   fextname=NULL to only load exactly the name <li> provided. fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx'
-#'   则读入仍是'abx.txt'而不是'abx.dfx'或'
+#' @param fextname basicly, <li> members do not include an extention name, fextname is used to set
+#'   the <li> extention name. set fextname=NULL to only load exactly the name <li> provided.
+#'   fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx' 则读入仍是'abx.txt'而不是'abx.dfx'或'
 #' @param worker
 #' @param verbose
 #' @param row.names
@@ -44,6 +56,7 @@ tryCatch(
 #' @export
 #' @import dplyr
 #' @import stringr
+#' @seealso \code{\link[data.table]{fread}}
 #' @examples
 #'
 yload_dfx = function(li = NULL,
@@ -59,18 +72,18 @@ yload_dfx = function(li = NULL,
     # retmode in c('local','global')
     # fextname in c(str, NULL)
     # default parameters with custom one
-    std_args = yfunc_args(utils::read.table)
+    default_load_func = data.table::fread
+    std_args = yfunc_args(default_load_func)
     argv = list(
         sep = "\t",
-        header = T,
+        header = TRUE,
         quote = "",
-        stringsAsFactors = F,
-        comment.char = "",
+        # comment.char = "",
         na.strings = "",
         row.names = row.names
     ) %>% utils::modifyList(yfunc_args(), keep.null = TRUE) %>% ysubset_list_named(std_args)
 
-    if ('data.frame' %in% (li %>% class))
+    if ( length(intersect(c('data.frame', 'data.table', 'matrix'), class(li))) > 0 )
         return(li)
     if (length(li) >= 1 || !is.null(li)) {
         # files [(frm1,f_name1,f_ext1),(frm1,f_name2,f_ext2)...]
@@ -88,10 +101,12 @@ yload_dfx = function(li = NULL,
             } else if (length(tmp) >= 2) {
                 ffname = tmp %>% yslice(-1)
                 myfrm = tmp %>% yslice(1:-2)
-                if (myfrm[[1]] %in% c('/', '~', '.','..')) {
+                if (myfrm[[1]] %in% c('/', '~','..')) {
                     myfrm = myfrm %>% str_flatten(collapse = '/')
+                } else if(myfrm[[1]] %in% c('.')){
+                    myfrm = c(frm, myfrm) %>% str_flatten(collapse = '/') %>% str_replace(fixed('/./'),'/')
                 } else{
-                    myfrm = c(frm, myfrm) %>% str_flatten(collapse = '/')
+                    myfrm = myfrm
                 }
             } else{
                 stop("item in @li is wrong")
@@ -117,6 +132,7 @@ yload_dfx = function(li = NULL,
             }
         }
     }
+
     res = list()
     for (file in files) {
         # files is list of ('path','file_name','ext_name')
@@ -169,7 +185,7 @@ yload_dfx = function(li = NULL,
         } else {
             "fextname == {txt,dfx,...} "
             argv$file = input
-            res[[vname]] = utils::read.table %>% do.call(args = argv)
+            res[[vname]] = default_load_func %>% do.call(args = argv)
         }
         if (retmode == "global") {
             assign(vname, res[[vname]], envir = .GlobalEnv)
@@ -189,7 +205,11 @@ yload_dfx = function(li = NULL,
     }
 }
 
+#' Alias to \code{yload_dfx}
+#'
 #' @export
+#' @seealso \code{\link{yload_dfx}}
+#'
 db.importing = yload_dfx
 
 
@@ -542,13 +562,13 @@ yget_args = function (..., .f = NULL) {
 #' @return character vector if get_default_values==FALSE NOT recommended to use, cause can not determine the exact
 #'   behavior at current at 2023-04-19 seems to get the list with names are the arg names and values are the default
 #'   values at the run time
-#'
+#' @export
 #' @examples
 #' \dontrun{
 #'   yfunc_args(utils::read.table)
 #' }
 #'
-yfunc_args <- function(func=NULL, get_default_values = FALSE) {
+yfunc_args = function(func=NULL, get_default_values = FALSE) {
     ""
     if (is.null(func)){
         # get formaMls for parent function

@@ -18,18 +18,26 @@ yload_dfx(
 )
 }
 \arguments{
-\item{li}{overwritting <pattern> settings a character vector, if length(<li>)>1 generate a named list else generate
-the dataframe read, return is determined further by <retmode> a character vector whose element <i> refers to dfx
-names, if <i> is not started with c('/','~','./'), find <i>.<fextname> in folder <frm> else use <i> as the path, ignore
-<frm> for the current <i> if input li is a data.frame it will be returned immediately}
+\item{li}{A character vector, whose element <i> will be interpretated as the value of  dfx names,
+if <i> starts with c('/','~','../'), find `<i>.<fextname>` in the root ('/'), home ('~') or
+parent ('../') folder. if <i> is a file name with no path info (like 'abc.txt' or 'abc'), then
+file <i> will be search in the <frm> folder. if <i> contains a folder level, (like 'abc/tmp',
+'report/abc.txt'), ignore <frm> for the current <i>, search files in the <i> given folder.
+NOTE: If you want to refer to the files in the subfolder in the <frm> path, add './' in the
+beginning of the <i>: if `frm = 'export', li = 'folder/data.txt'`, search the data.txt in the
+current folder (`./folder/data.txt` is searched), `frm = 'export', li = './folder/data.txt'`,
+search data.txt in the <frm> folder (`./export/folder/data.txt` is searched). if input li is a
+data.frame, a matrix, or a data.table, it will be returned as it is. `li` Overwrites <pattern>
+settings, if `length(<li>) > 1` generate a named list, else generate the data.frame read.
+Returned value is determined further by <retmode>.}
 
 \item{frm}{a folder.path, all the data will be read from this path}
 
 \item{pattern}{a RegExpr to glob, return matched files, only acts when `li` is NULL}
 
-\item{fextname}{basicly, <li> members do not include an extention name, fextname is used to set the <li> extention name. set
-fextname=NULL to only load exactly the name <li> provided. fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx'
-则读入仍是'abx.txt'而不是'abx.dfx'或'}
+\item{fextname}{basicly, <li> members do not include an extention name, fextname is used to set
+the <li> extention name. set fextname=NULL to only load exactly the name <li> provided.
+fextname不会修改已经显式声明的扩展名，如li=c('abx.txt'),fextname='dfx' 则读入仍是'abx.txt'而不是'abx.dfx'或'}
 
 \item{retmode}{}
 }
@@ -40,7 +48,11 @@ df or list of dfs if retmode=='local', assign every df to .GlobalEnv if retmode=
 Load data.frame sheet from files
 }
 \details{
-依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` && `fextname` both NULL
-  and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT, yfunc_args, read.table, %>%,
-  modifyList, yslice, str_flatten, str_detect, fixed, ypush, str_sub, ypath_join
+依赖于 yslice, ypush, ylog, ysplit_path, ysplit_file_name, yfile_path, <stringr> if `li` &&
+  `fextname` both NULL and `frm` is not NULL, read all files from `frm`. Depends on: INPUTROOT,
+  yfunc_args, read.table, %>%, modifyList, yslice, str_flatten, str_detect, fixed, ypush,
+  str_sub, ypath_join
+}
+\seealso{
+\code{\link[data.table]{fread}}
 }
