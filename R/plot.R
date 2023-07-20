@@ -310,7 +310,6 @@ yplot_volcano_using_de = function (diff_expr,
     list(gg = g, de = de)
 }
 
-
 #' guess group column name in the data.frame
 #'
 #' @param df
@@ -516,7 +515,7 @@ yplot_venns = function(...
     make.custom(6,6)
     x = do.call(plot_func,args = argv)
 
-    if (ret == TRUE){
+    if (.ret == TRUE){
         return(list(plot_func=plot_func,args=argv,func_name=plot_func_name))
     }
 }

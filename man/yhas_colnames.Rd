@@ -4,7 +4,7 @@
 \alias{yhas_colnames}
 \title{Check DataFrame rownames and column names}
 \usage{
-yhas_colnames(df)
+yhas_colnames(df, col = NULL)
 }
 \arguments{
 \item{df}{must be a class of data.frame}

@@ -330,10 +330,15 @@ yhas_rownames = function(df){
 #' @export
 #'
 #' @examples
-yhas_colnames = function(df){
+yhas_colnames = function(df, col=NULL){
     stopifnot(is.data.frame(df))
+
     cn = Negate(is.null)(names(df))
-    cn
+    if (is.null(col)){
+        reuturn(cn)
+    }else{
+
+    }
 }
 
 
