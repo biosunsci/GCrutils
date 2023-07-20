@@ -77,7 +77,7 @@ yload_dfx = function(li = NULL,
         ns = names(user_args)
         if (length(intersect(c("row.names",'comment.char','fileEncoding'),ns))>0){
             default_load_func = utils::read.table
-        } else if (length(intersect(c("skip",'sep2','select','drop'),ns))>0){
+        }else if (length(intersect(c("skip",'sep2','select','drop'),ns))>0){
             default_load_func = data.table::fread
         }else{
             default_load_func = data.table::fread
@@ -94,6 +94,7 @@ yload_dfx = function(li = NULL,
         sep = "\t",
         quote = "",
         na.strings = "",
+        header = TRUE,
         check.names = FALSE,
         strip.white = TRUE,
         fill = FALSE,
