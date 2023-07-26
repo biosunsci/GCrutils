@@ -231,7 +231,7 @@ ydo_GO_bydiff = function(diff,
                     str_split("/", simplify = TRUE) %>% .[, 1] %>% as.integer,
                 EnrichedPer = round(EnrichedGeneNum / setSize * 100),
                 Change = 'DiffExpr'
-            ) %>% dplyr::select(!geneID)
+            ) #%>% dplyr::select(!geneID)
     }
     attr(res.tb, 'class') = c(class(res.tb), 'y.GO.res.dtable')
     print('GO analysis Done')
@@ -278,7 +278,7 @@ ydo_GO = function(sig_genes,
     .T_ylab_wrap = 50
     ont = toupper(ont)
     if (is.null(ggsci_col_scheme)) {
-        npg = pal_npg()(10)[c(3, 6, 9)]
+        npg = ggsci::pal_npg()(10)[c(3, 6, 9)]
     } else{
         npg = ggsci_col_scheme
     }
@@ -307,11 +307,11 @@ ydo_GO = function(sig_genes,
         error = function(err) {
             assign(
                 "GENE.REF",
-                value = bitr(
+                value = clusterProfiler::bitr(
                     all_genes,
                     fromType = "SYMBOL",
                     toType = c("ENTREZID"),
-                    OrgDb = org.Hs.eg.db
+                    OrgDb = "org.Hs.eg.db"
                 )  %>%
                     arrange(SYMBOL) %>%
                     distinct(SYMBOL, .keep_all = TRUE) %>%
@@ -335,7 +335,7 @@ ydo_GO = function(sig_genes,
         print(rm.genes)
     }
     # sig_genes/diff为GO分析的主体数据, 使用ENTREZID做分析, 使用全局变量GENE.REF作为map转换symbols->ENTREZID
-    ego = enrichGO(
+    ego = clusterProfiler::enrichGO(
         gene       = GENE.REF[sig_genes, 'ENTREZID'],
         universe      = GENE.REF$ENTREZID,
         ont           = ont,
