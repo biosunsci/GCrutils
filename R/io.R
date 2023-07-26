@@ -264,7 +264,7 @@ db.importing = yload_dfx
 #'
 ysave = function (fc = NULL,
                   ...,
-                  table_title_lines = list(),
+                  table_title_lines = NULL,
                   outputdir = OUTPUTROOT,
                   sep = "_",
                   family = "sans")
@@ -313,7 +313,12 @@ ysave = function (fc = NULL,
             sheetname = sheetnames[[i]]
             openxlsx::addWorksheet(wb, sheetname)
             tt = class(fc[[i]])
-            title_line = table_title_lines[i]
+            if (!is.null(table_title_lines)){
+                title_line = table_title_lines[i]
+            }else{
+                title_line = NULL
+            }
+
             rowNames = yhas_rownames(fc[[i]])
             if (tt %>% intersect(c('tibble', 'data.frame', 'matrix')) %>% length > 0) {
                 if (!is.null(title_line) && title_line != "") {

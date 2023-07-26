@@ -13,6 +13,7 @@ yplot_pca(
   tag_fontsize = 6,
   max.overlaps = Inf,
   alpha = 0.6,
+  .ret = FALSE,
   ...
 )
 }

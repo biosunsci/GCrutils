@@ -392,6 +392,8 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, color_col = NUL
     res$gg = gg
     if (.ret==TRUE){
         return(res)
+    }else{
+        print(gg)
     }
 }
 
@@ -412,7 +414,7 @@ yplot_tsne = function (normd = NULL, colData = NULL, mat = NULL, color_col = NUL
 #'
 #' @examples
 yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_polygon=FALSE,
-                      tag_fontsize = 6, max.overlaps = Inf, alpha = 0.6, ...) {
+                      tag_fontsize = 6, max.overlaps = Inf, alpha = 0.6, .ret=FALSE, ...) {
     sig_table = normd %>% t
     mask = (sig_table %>% apply(sd, MARGIN = 2)) > 0
     mat = sig_table[, mask]
@@ -450,7 +452,12 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
                                lwd = 0.5)
     }
     res$gg = gg
-    return(res)
+    if (.ret==TRUE){
+        return(res)
+    }else{
+        print(gg)
+    }
+
 }
 
 #' Plot venn diagram for 2~5 sets

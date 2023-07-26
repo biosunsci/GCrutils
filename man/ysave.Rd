@@ -7,7 +7,7 @@
 ysave(
   fc = NULL,
   ...,
-  table_title_lines = list(),
+  table_title_lines = NULL,
   outputdir = OUTPUTROOT,
   sep = "_",
   family = "sans"
