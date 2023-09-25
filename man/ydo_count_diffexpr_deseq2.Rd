@@ -11,6 +11,7 @@ ydo_count_diffexpr_deseq2(
   col.group = "Clin_classification",
   paired = FALSE,
   levels = NULL,
+  .retSimpleTable = TRUE,
   ...
 )
 }

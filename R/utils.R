@@ -713,7 +713,10 @@ check.numeric = function(v = NULL, na.rm = FALSE, only.integer = FALSE,
 #' @export
 #'
 #' @examples
-make.custom = function (w, h=NULL, .set_global = TRUE) {
+make.custom = function (w=NULL, h=NULL, .set_global = TRUE) {
+    if (is.null(w) && is.null(h)){
+        return(c(WIDTH,HEIGHT))
+    }
     l = length(w)
     if (l==2){
         h = w[[2]]

@@ -2,6 +2,7 @@
 
 
 
+
 #' Title use DESeq2 to do normalization and/or diff expr analysis for count data
 #'
 #' @param count_file_ you either provide @count_file_ which refer to a file path which will be read by `yload_dfx` or @cnt_ a data.frame/matrix obj containing rna count data with rows are genes and columns are patients
@@ -310,12 +311,17 @@ ydo_count_deseq2 = function(cnt
 #'
 #' @examples
 ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sample_Barcode'
-                                     ,col.group='Clin_classification',paired=FALSE,levels=NULL,...){
+                                     ,col.group='Clin_classification',paired=FALSE,levels=NULL,.retSimpleTable=TRUE,...){
+
     if (is.null(levels)){
         levels = colData.sorted[[col.group]] %>% unique
     }
     if (colData.sorted %>% has_rownames){
         colData.sorted = colData.sorted %>% rownames_to_column(col.id)
+    }
+    stopifnot((colnames(cnt.sorted) == rownames(colData.sorted)) %>% all)
+    if (is.data.frame(cnt.sorted)){
+        cnt.sorted = as.matrix(cnt.sorted)
     }
     sym.col.id = sym(col.id)
     sym.col.group = sym(col.group)
@@ -387,6 +393,83 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sa
     x$diff_expr_details = x$diff_expr %>% data.frame %>%
         mutate(log2FC_abs = abs(log2FoldChange),.after = log2FoldChange) %>%
         mutate(FC_Ins = log2FoldChange >= 0) %>%
-        arrange(desc(log2FC_abs))
-    x
+        arrange(desc(log2FC_abs)) %>%
+        rownames_to_column('symbol')
+
+    if (.retSimpleTable ==TRUE){
+        return(diff_expr_details)
+    }else{
+        return(x)
+    }
 }
+
+
+# library(limma)
+
+#' @description  like ydo_count_diffexpr_deseq2,  but used with numeric value but not count values
+#'
+#' @param numeric.sorted rows are genes, columns are TSBs (Tumor Sample Barcode of samples)
+#' @param colData.sorted rows are TSBs and columns are groups, 列名至少包含[col.id = 'Tumor_Sample_Barcode',col.group = 'Clin_classification']
+#' @param col.id id as rownames of colData.sorted, usually Tumor_Sample_Barcode
+#' @param col.group group column in colData.sorted
+#' @param levels compare order, The first level in levels will be control group(Denominator) in DEG
+#'   results. the first one is used as the control CTL, for example, if levels = c(CTL, EXP) then
+#'   the result log2FoldChange > 0 if EXP > CTL
+#'
+#' @return
+#' @export
+#'
+#' @examples
+ydo_numeric_DEG_limma = function(numeric.sorted, colData.sorted,col.id = 'Tumor_Sample_Barcode', col.group = 'Clin_classification', levels=NULL){
+
+    if (!colData.sorted %>% has_rownames){
+        colData.sorted = colData.sorted %>% column_to_rownames(col.id)
+    }
+    stopifnot((colnames(numeric.sorted) == rownames(colData.sorted)) %>% all)
+    if (is.data.frame(numeric.sorted)){
+        numeric.sorted = as.matrix(numeric.sorted)
+    }
+    stopifnot(col.group %in% colnames(colData.sorted))
+    if (is.null(levels)){
+        levels = colData.sorted[[col.group]] %>% unique()
+        print(levels)
+    }else{
+        .i = levels[1]
+        levels = c(levels[2:length(levels)], .i)
+    }
+    contrast_order = stringr::str_flatten(levels, collapse = ' - ')
+
+    print("-------------------------------------------------------------")
+    print(paste0("Comparing > ", 'unpaired', " < ", contrast_order,
+                 ", REF_GROUP = ", levels[length(levels)]))
+    print("-------------------------------------------------------------")
+
+    g = colData.sorted[[col.group]] %>% factor(levels=levels)
+
+    design <- stats::model.matrix(~ g - 1)
+    colnames(design) = levels
+
+    fit <- limma::lmFit(numeric.sorted, design)
+    contrast.matrix <- limma::makeContrasts(contrasts = contrast_order, levels = design)
+
+    fit2 = limma::contrasts.fit(fit, contrast.matrix)
+    fit2 <- limma::eBayes(fit2)
+    results <- limma::topTable(fit2, coef=1, number=Inf)
+
+    colnames(results) = c("log2FoldChange",'baseMean','t','pvalue','padj','B')
+    # c('baseMean','log2FoldChange','log2FC_abs','lfcSE','stat','pvalue','padj','FC_Ins')
+    #     print('assign stat = t')
+    results$stat = results$t
+    results$abs_log2FC = abs(results$log2FoldChange)
+    results$FC_Ins = results$log2FoldChange > 0
+
+    # cal mean of each group
+    for (i in levels(g)){
+        mat = numeric.sorted[,g == i]
+        results[[paste0("median_",i)]] = matrixStats::rowMedians(mat)
+    }
+    #     mean.df = apply(numeric.sorted, 1, function(x) tapply(x, g, mean, na.rm = TRUE)) %>% t %>% as.data.frame
+    #     results = cbind(results,mean.df)
+    results %>% rownames_to_column('symbol')
+}
+
