@@ -321,14 +321,24 @@ ysave = function (fc = NULL,
 
             rowNames = yhas_rownames(fc[[i]])
             if (tt %>% intersect(c('tibble', 'data.frame', 'matrix')) %>% length > 0) {
-                if (!is.null(title_line) && title_line != "") {
-                    openxlsx::writeData(
-                        wb,
-                        sheet =  sheetname,
-                        x =  paste0('## ', title_line),
-                        startRow = 1,
-                        startCol = 1
-                    )
+                if (!is.null(title_line)) {
+                    if (title_line != ""){
+                            openxlsx::writeData(
+                            wb,
+                            sheet =  sheetname,
+                            x =  paste0('## ', title_line),
+                            startRow = 1,
+                            startCol = 1
+                        )
+                    }else{
+                        openxlsx::writeData(
+                            wb,
+                            sheet =  sheetname,
+                            x =  "",
+                            startRow = 1,
+                            startCol = 1
+                        )
+                    }
                     openxlsx::writeData(
                         wb,
                         sheet =  sheetname,
@@ -337,12 +347,12 @@ ysave = function (fc = NULL,
                         startCol = 1,
                         rowNames = rowNames
                     )
-                } else{
+                } else {
                     openxlsx::writeData(
                         wb,
                         sheet =  sheetname,
                         x =  fc[[i]],
-                        startRow = 2,
+                        startRow = 1,
                         startCol = 1,
                         rowNames = rowNames
                     )
