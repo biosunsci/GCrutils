@@ -319,9 +319,9 @@ ysave = function (fc = NULL,
                 title_line = NULL
             }
 
-            rowNames = yhas_rownames(fc[[i]])
             if (tt %>% intersect(c('data.table','tibble', 'data.frame', 'matrix')) %>% length > 0) {
                 sheet  = as.data.frame(fc[[i]])
+                rowNames = yhas_rownames(sheet)
                 if (!is.null(title_line)) {
                     if (title_line != ""){
                             openxlsx::writeData(
