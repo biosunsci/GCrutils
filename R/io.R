@@ -806,7 +806,7 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
     }
 
     tryCatch({
-        dev(file, ...)
+        dev(file, width=WIDTH, height=HEIGHT, ...)
         eval(x)
     }, finally = {
         dev.off()

@@ -12,23 +12,45 @@ yget_signatures_related_all(
   single_core = TRUE,
   ...
 )
+
+yget_signatures_related_all(
+  laml,
+  cosmic_ver = "v2",
+  rank = 3,
+  nrun = 3,
+  single_core = TRUE,
+  ...
+)
 }
 \arguments{
-\item{laml}{Maf type obj, by maftools::read.maf}
+\item{laml}{maftools::maf object}
 
-\item{cosmic_ver}{{v2:30 classical, v3: SBS signatures}}
+\item{cosmic_ver}{c('v2','v3')}
 
-\item{rank}{3, numbers of signatures to extract}
+\item{rank}{number of signatures extracted}
 
-\item{nrun}{3, re sample times in extracting signatures}
+\item{nrun}{resample times}
 
-\item{...}{}
+\item{single_core}{[MutationalPatterns::extract_signatures()]}
+
+\item{...}{pass to MutationalPatterns::extract_signatures}
 }
 \value{
 list, of list(mut_mat=mut_mat,extracted_n_signatures_suit=custom_sigs,contribution=fit_res$contribution,tnm=laml.tnm)
+
+list contains:
+ mut_mat: the tri-nucleotide-matrix:TNM
+ extracted_n_signatures_suit: extracted signatures
+ contribution: matrix of each samples' known COSMIC signatures' contribution components
+ tnm: list of maftools::trinucleotideMatrix return values
 }
 \description{
-extract tnm, signatures and signatures contributions using maf objects
+using a maftools::readMaf returned MAF object
+sequentially use maftools::trinucleotideMatrix ->
+MutationalPatterns::extract_signatures ->
+MutationalPatterns::fit_to_signatures to generate cosmic signatures
+cosmic_ver, v2 means 30 v2 COSMIC signatures, v3 means the 79 v3 SBS signatures
+rank, nrun and single_corepassed to MutationalPatterns::extract_signatures
 }
 \details{
 use maftools::trinucleotideMatrix to get tri-nucleotides mutations
