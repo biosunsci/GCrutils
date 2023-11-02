@@ -475,7 +475,7 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #' @examples
 yplot_venns = function(...
                        ,.title=NULL
-                       ,plot.argv=list(cat.dist = 0.05)
+                       ,draw.args=list(cat.dist = 0.05)
                        ,.ret = FALSE
                        ){
     # if parameters is not named, get the sym name of each parameter
@@ -518,7 +518,7 @@ yplot_venns = function(...
                                , fill = c("dodgerblue",
                                           "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
                                cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE
-    )%>%c(plot.argv))
+    )%>%c(draw.args))
     make.custom(6,6)
     x = do.call(plot_func,args = argv)
 
@@ -551,7 +551,7 @@ yplot_venns_bydf = function (df,id_col, group_col='Clin_classification', .ret=FA
         group_by(!!sym_group_col) %>%
         summarize(values = list(!!sym_id_col)) %>%
         ungroup() %>%
-        {setNames(.$values, .[[group_col]])}
+        {setNames(.$values, .[[group_col]])} %>% c(list(draw.args = list(...)))
 
     res = yplot_venns %>% do.call(my_list)
     if (.ret == TRUE){
