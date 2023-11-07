@@ -465,12 +465,40 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #' @param ... named params or un-named params, each represents a set to be draw, Number of params
 #'   min2 max5
 #' @param .title NOT implement at current
-#' @param plot.argv additional params control the plot appearance
+#' @param draw.args additional params control the plot appearance
 #' @param .ret default FALSE, whether to return plotting data and func, default FALSE
 #'
 #' @return if .ret==TRUE return list(plot_func=plot_func,args=argv,func_name=plot_func_name) else
 #'   nothing is returned
 #' @export
+#'
+#' @details
+#' `draw.args` values used to control the graphics of the VennDiagram drawing functions:
+#' lwd     A vector (length 4) of numbers giving the line width of the circles' circumferences
+#' lty     A vector (length 4) giving the dash pattern of the circles' circumferences
+#' col     A vector (length 4) giving the colours of the circles' circumferences
+#' fill        A vector (length 4) giving the colours of the circles' areas
+#' alpha       A vector (length 4) giving the alpha transparency of the circles' areas
+#' label.col       A vector (length 15) giving the colours of the areas' labels
+#' cex     A vector (length 15) giving the size of the areas' labels
+#' fontface        A vector (length 15) giving the fontface of the areas' labels
+#' fontfamily      A vector (length 15) giving the fontfamily of the areas' labels
+#' cat.pos     A vector (length 4) giving the positions (in degrees) of the category names along the circles, with 0 (default) at 12 o'clock
+#' cat.dist        A vector (length 4) giving the distances (in npc units) of the category names from the edges of the circles (can be negative)
+#' cat.cex     A vector (length 4) giving the size of the category names
+#' cat.col     A vector (length 4) giving the colours of the category names
+#' cat.fontface        A vector (length 4) giving the fontface of the category names
+#' cat.fontfamily      A vector (length 4) giving the fontfamily of the category names
+#' cat.just        List of 4 vectors of length 2 indicating horizontal and vertical justification of each category name
+#' rotation.degree     Number of degrees to rotate the entire diagram
+#' rotation.centre     A vector (length 2) indicating (x,y) of the rotation centre
+#' ind     Boolean indicating whether the function is to automatically draw the diagram before returning the gList object or not
+#' cex.prop        A function or string used to rescale areas
+#' print.mode      Can be either 'raw' or 'percent'. This is the format that the numbers will be printed in. Can pass in a vector with the second element being printed under the first
+#' sigdigs     If one of the elements in print.mode is 'percent', then this is how many significant digits will be kept
+#' direct.area     If this is equal to true, then the vector passed into area.vector will be directly assigned to the areas of the corresponding regions. Only use this if you know which positions in the vector correspond to which regions in the diagram
+#' area.vector     An argument to be used when direct.area is true. These are the areas of the corresponding regions in the Venn Diagram
+#'
 #'
 #' @examples
 yplot_venns = function(...
@@ -534,17 +562,42 @@ yplot_venns = function(...
 #' @param group_col
 #' @param .ret if TRUE return the res object
 #' @param df
+#' @param ... plotting parameters pass to yplot_venns$draw.args finally to VennDiagram drawing
+#'   functions. see details
 #'
 #' @return if .ret==TRUE return the res object else nothing is returned
 #' @export
 #'
+#' @details
+#' ... values used to control the graphics of the VennDiagram drawing functions:
+#' lwd     A vector (length 4) of numbers giving the line width of the circles' circumferences
+#' lty     A vector (length 4) giving the dash pattern of the circles' circumferences
+#' col     A vector (length 4) giving the colours of the circles' circumferences
+#' fill        A vector (length 4) giving the colours of the circles' areas
+#' alpha       A vector (length 4) giving the alpha transparency of the circles' areas
+#' label.col       A vector (length 15) giving the colours of the areas' labels
+#' cex     A vector (length 15) giving the size of the areas' labels
+#' fontface        A vector (length 15) giving the fontface of the areas' labels
+#' fontfamily      A vector (length 15) giving the fontfamily of the areas' labels
+#' cat.pos     A vector (length 4) giving the positions (in degrees) of the category names along the circles, with 0 (default) at 12 o'clock
+#' cat.dist        A vector (length 4) giving the distances (in npc units) of the category names from the edges of the circles (can be negative)
+#' cat.cex     A vector (length 4) giving the size of the category names
+#' cat.col     A vector (length 4) giving the colours of the category names
+#' cat.fontface        A vector (length 4) giving the fontface of the category names
+#' cat.fontfamily      A vector (length 4) giving the fontfamily of the category names
+#' cat.just        List of 4 vectors of length 2 indicating horizontal and vertical justification of each category name
+#' rotation.degree     Number of degrees to rotate the entire diagram
+#' rotation.centre     A vector (length 2) indicating (x,y) of the rotation centre
+#' ind     Boolean indicating whether the function is to automatically draw the diagram before returning the gList object or not
+#' cex.prop        A function or string used to rescale areas
+#' print.mode      Can be either 'raw' or 'percent'. This is the format that the numbers will be printed in. Can pass in a vector with the second element being printed under the first
+#' sigdigs     If one of the elements in print.mode is 'percent', then this is how many significant digits will be kept
+#' direct.area     If this is equal to true, then the vector passed into area.vector will be directly assigned to the areas of the corresponding regions. Only use this if you know which positions in the vector correspond to which regions in the diagram
+#' area.vector     An argument to be used when direct.area is true. These are the areas of the corresponding regions in the Venn Diagram
+#'
+#'
 #' @examples
 yplot_venns_bydf = function (df,id_col, group_col='Clin_classification', .ret=FALSE, ...) {
-    # my_list <- lapply(unique(df[[group_col]]), function(x) {
-    #     df[[id_col]][df[[group_col]] == x]
-    # })
-    # names(my_list) <- unique(df[[group_col]])
-
     sym_group_col = sym(group_col)
     sym_id_col = sym(id_col)
     my_list = df %>%

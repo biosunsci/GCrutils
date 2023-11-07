@@ -866,3 +866,27 @@ print.y.GSEA.res <- function(x){
     )
     print(str_flatten(msg,collapse = '  '))
 }
+
+#' Title
+#'
+#' @param pvalues a numeric vector
+#'
+#' @return character, * formatted pvalues
+#' @export
+#'
+#' @examples
+ypvalue_add_asterisks = function(pvalues) {
+    pvalues %>% purrr::map_chr(function(p){
+        if (p < 0.0001){
+            return('****')
+        }else if (p < 0.001) {
+            return("***")
+        } else if (p < 0.01) {
+            return("**")
+        } else if (p < 0.05) {
+            return("*")
+        } else {
+            return("ns") # not significant
+        }
+    })
+}

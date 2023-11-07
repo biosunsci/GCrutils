@@ -274,6 +274,7 @@ ysave = function (fc = NULL,
     name = str_flatten(c(...), collapse = sep)
     if (l == 1 && t == 'NULL') {
         return(c(
+            full_path_name = file.path(outputdir,name),
             outname = name,
             outputdir = outputdir,
             width = WIDTH,
