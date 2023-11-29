@@ -7,5 +7,4 @@
 .DS_Store
 tests/
 ysunUtils.Rproj
-.Rbuildignore
 data/.DS_Store
