@@ -452,7 +452,7 @@ ygen_subMafs_ = function(maf,glx,col = NULL,id_col='Tumor_Sample_Barcode',.conta
         .assignGlobal = FALSE
         stopifnot(is.list(.container))
     }
-    if (class(maf)=='MAF'){
+    if ('MAF' %in% class(maf)){
         stop('Please not input MAF read but raw snv/cnv data.frame and raw glx data.frame')
     }
     if (is.null(col)){
