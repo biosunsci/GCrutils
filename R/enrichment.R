@@ -165,7 +165,7 @@ ydo_GO_bydiff = function(diff,
         error = function(err) {
             assign(
                 "GENE.REF",
-                value = bitr(
+                value = clusterProfiler::bitr(
                     all_genes,
                     fromType = "SYMBOL",
                     toType = c("ENTREZID"),
@@ -184,7 +184,7 @@ ydo_GO_bydiff = function(diff,
         res.ego = list()
         for (direction in c('Up', 'Down')) {
             genes = sig_genes %>% filter(FC_Ins == (direction == "Up")) %>% rownames
-            ego = enrichGO(
+            ego = clusterProfiler::enrichGO(
                 gene = GENE.REF[genes, "ENTREZID"],
                 universe = GENE.REF$ENTREZID,
                 ont = ont,
@@ -210,7 +210,7 @@ ydo_GO_bydiff = function(diff,
             )
     } else{
         genes = sig_genes %>% rownames
-        res.ego = enrichGO(
+        res.ego = clusterProfiler::enrichGO(
             gene = GENE.REF[genes, "ENTREZID"],
             universe = GENE.REF$ENTREZID,
             ont = ont,
@@ -335,7 +335,7 @@ ydo_GO = function(sig_genes,
         print(rm.genes)
     }
     # sig_genes/diff为GO分析的主体数据, 使用ENTREZID做分析, 使用全局变量GENE.REF作为map转换symbols->ENTREZID
-    ego = clusterProfiler::enrichGO(
+    ego = clusterProfiler::clusterProfiler::enrichGO(
         gene       = GENE.REF[sig_genes, 'ENTREZID'],
         universe      = GENE.REF$ENTREZID,
         ont           = ont,

@@ -316,10 +316,14 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sa
     if (is.null(levels)){
         levels = colData.sorted[[col.group]] %>% unique
     }
-    if (colData.sorted %>% has_rownames){
+
+    if (colData.sorted %>% has_rownames) {
+        stopifnot((colnames(cnt.sorted) == rownames(colData.sorted)) %>% all)
         colData.sorted = colData.sorted %>% rownames_to_column(col.id)
+    }else{
+        stopifnot((colnames(cnt.sorted) == colData.sorted[[col.id]]) %>% all)
     }
-    stopifnot((colnames(cnt.sorted) == rownames(colData.sorted)) %>% all)
+
     if (is.data.frame(cnt.sorted)){
         cnt.sorted = as.matrix(cnt.sorted)
     }
