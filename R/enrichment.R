@@ -335,7 +335,7 @@ ydo_GO = function(sig_genes,
         print(rm.genes)
     }
     # sig_genes/diff为GO分析的主体数据, 使用ENTREZID做分析, 使用全局变量GENE.REF作为map转换symbols->ENTREZID
-    ego = clusterProfiler::clusterProfiler::enrichGO(
+    ego = clusterProfiler::enrichGO(
         gene       = GENE.REF[sig_genes, 'ENTREZID'],
         universe      = GENE.REF$ENTREZID,
         ont           = ont,
