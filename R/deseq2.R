@@ -1,8 +1,3 @@
-
-
-
-
-
 #' Title use DESeq2 to do normalization and/or diff expr analysis for count data
 #'
 #' @param count_file_ you either provide @count_file_ which refer to a file path which will be read by `yload_dfx` or @cnt_ a data.frame/matrix obj containing rna count data with rows are genes and columns are patients
@@ -89,7 +84,7 @@ ynormalize_count_bydeseq2 = function(count_file_
 
     if (norm==TRUE){
         # DO normalization
-        ddsNormMatrix = DESeqDataSetFromMatrix(count_table, colData = colData2, design= ~ 1)
+        ddsNormMatrix = DESeq2::DESeqDataSetFromMatrix(count_table, colData = colData2, design= ~ 1)
         tryrrrr <- try({
             vsd <- vst(ddsNormMatrix,nsub = min(1000,dim(ddsNormMatrix)[[1]]))
             'OK'
@@ -109,7 +104,7 @@ ynormalize_count_bydeseq2 = function(count_file_
         #
         # design, the formula design, is a named vector with values is the TSB, and names is the grouping like
         # c(余先梅='GBM',刘利新='Midline',刘杰='Midline',刘锡全='GBM',...)
-        ddsDifExpMatrix = DESeqDataSetFromMatrix(count_table, colData = colData2, design= ~ Clin_classification)
+        ddsDifExpMatrix = DESeq2::DESeqDataSetFromMatrix(count_table, colData = colData2, design= ~ Clin_classification)
         lvls = lvls[1:2]
         print(paste('Compare between',lvls %>% str_flatten(collapse = " vs "),'. NOTE: grps with more than 2 group will only compare the first 2 groups'))
         diff_expr = ddsDifExpMatrix %>% DESeq %>% results(contrast=c('Clin_classification',lvls))
@@ -380,31 +375,6 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sa
     class(x) <- c('DEA.results',class(x))
     print('Done')
     return (x)
-
-    # DO diff expr analysis
-    # design, the formula design, is a named vector with values is the TSB, and names is the grouping like
-    # c(余先梅='GBM',刘利新='Midline',刘杰='Midline',刘锡全='GBM',...)
-    ddsDifExpMatrix = DESeq2::DESeqDataSetFromMatrix(cnt.sorted, colData = colData.sorted, design= ~ Clin_classification)
-    stopifnot(is.factor(colData.sorted$Clin_classification))
-    lvls = levels(colData.sorted$Clin_classification)
-    lvls = lvls[1:2]
-    print(paste('Compare between',lvls %>% str_flatten(collapse = " vs "),'. NOTE: grps with more than 2 group will only compare the first 2 groups'))
-    diff_expr = ddsDifExpMatrix %>% DESeq2::DESeq() %>% DESeq2::results(contrast=c('Clin_classification',lvls))
-    x$diff_expr=diff_expr
-    # x$dds_dif_exp_matrix=ddsDifExpMatrix
-    x$compare_order=lvls
-    x$tag_to_add = lvls %>% str_flatten(collapse = '_vs_')
-    x$diff_expr_details = x$diff_expr %>% data.frame %>%
-        mutate(log2FC_abs = abs(log2FoldChange),.after = log2FoldChange) %>%
-        mutate(FC_Ins = log2FoldChange >= 0) %>%
-        arrange(desc(log2FC_abs)) %>%
-        rownames_to_column('symbol')
-
-    if (.retSimpleTable ==TRUE){
-        return(diff_expr_details)
-    }else{
-        return(x)
-    }
 }
 
 
