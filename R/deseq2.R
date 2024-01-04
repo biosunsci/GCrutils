@@ -296,7 +296,7 @@ ydo_count_deseq2 = function(cnt
 #'
 #' @param cnt.sorted rows are genes, columns are TSBs (Tumor Sample Barcode of samples)
 #' @param colData.sorted rows are TSBs and columns are groups, 列名至少包含['Tumor_Sample_Barcode','Clin_classification'] for
-#'   @paired=F 列名至少包含['ap','a','g'] for @paired=T
+#'   @paired=F 列名至少包含['ap','a','g'] for @paired=T, make sure all this columns are not factors!
 #' @param paired Do paired test or un-paired test
 #' @param levels set compare order, the first in @levels is used as the control group.
 #' @param ...
@@ -309,6 +309,16 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sa
                                      ,col.group='Clin_classification',paired=FALSE,levels=NULL,.retSimpleTable=TRUE,...){
 
     if (is.null(levels)){
+        if (paired==TRUE){
+            stopifnot('g' %in% colnames(colData.sorted))
+            if (col.group=='Clin_classification'){
+                col.group = 'g'
+            }
+        }
+        if (is.factor(colData.sorted[[col.group]])){
+            print(paste('warning',col.group,'is factor convert it into charactors'))
+            colData.sorted[[col.group]] = as.character(colData.sorted[[col.group]])
+        }
         levels = colData.sorted[[col.group]] %>% unique
     }
 
@@ -329,10 +339,10 @@ ydo_count_diffexpr_deseq2 = function(cnt.sorted,colData.sorted, col.id='Tumor_Sa
         #         stopifnot(colData.sorted %>% has_colnames('a'))
         #         stopifnot(colData.sorted %>% has_colnames('g'))
         colData = colData.sorted %>%
-            select(Tumor_Sample_Barcode,a,g) %>%
+            select(!!sym.col.id,a,g) %>%
             mutate(a=factor(a),g=factor(g,levels=levels)) %>%
             arrange(a,g) %>%
-            column_to_rownames("Tumor_Sample_Barcode")
+            column_to_rownames(col.id)
     }else{
         colData = colData.sorted %>%
             select(a=!!sym.col.id,!!sym.col.group) %>%

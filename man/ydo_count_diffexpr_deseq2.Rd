@@ -19,7 +19,7 @@ ydo_count_diffexpr_deseq2(
 \item{cnt.sorted}{rows are genes, columns are TSBs (Tumor Sample Barcode of samples)}
 
 \item{colData.sorted}{rows are TSBs and columns are groups, 列名至少包含['Tumor_Sample_Barcode','Clin_classification'] for
-@paired=F 列名至少包含['ap','a','g'] for @paired=T}
+@paired=F 列名至少包含['ap','a','g'] for @paired=T, make sure all this columns are not factors!}
 
 \item{paired}{Do paired test or un-paired test}
 

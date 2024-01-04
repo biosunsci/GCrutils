@@ -4,12 +4,7 @@
 \alias{yplot_venns}
 \title{Plot venn diagram for 2~5 sets}
 \usage{
-yplot_venns(
-  ...,
-  .title = NULL,
-  draw.args = list(cat.dist = 0.05),
-  .ret = FALSE
-)
+yplot_venns(sets, fill = NULL, ...)
 }
 \arguments{
 \item{...}{named params or un-named params, each represents a set to be draw, Number of params

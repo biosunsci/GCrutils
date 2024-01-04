@@ -501,33 +501,21 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #'
 #'
 #' @examples
-yplot_venns = function(...
-                       ,.title=NULL
-                       ,draw.args=list(cat.dist = 0.05)
-                       ,.ret = FALSE
-                       ){
-    # if parameters is not named, get the sym name of each parameter
-    sets = list(...)
-    if (is.null(names(sets))) {
-        sets_syms <- match.call(expand.dots = FALSE)$...
-        names(sets) <- paste0("arg", seq_along(sets_syms))
-        names(sets) <- sapply(sets_syms, deparse)
-    }
-    # fi
-
+yplot_venns = function (sets, fill=NULL, ...)
+{
     x = length(sets)
-    stopifnot(x <= 5&& x >=1)
-
+    stopifnot(is.list(sets))
+    stopifnot(x <= 5 && x >= 1)
+    if (is.null(fill)) {
+        fill = c("dodgerblue", "goldenrod1", "darkorange1", "seagreen3", "orchid3")
+    }else{
+        stopifnot(all(is.character(fill)) && length(fill) >= x)
+    }
     argv = list()
-    DICT = list(  draw.single.venn = VennDiagram::draw.single.venn
-                  , draw.pairwise.venn = VennDiagram::draw.pairwise.venn
-                  , draw.triple.venn = VennDiagram::draw.triple.venn
-                  , draw.quad.venn = VennDiagram::draw.quad.venn
-                  , draw.quintuple.venn = VennDiagram::draw.quintuple.venn)
-
+    DICT = list(VennDiagram::draw.single.venn, VennDiagram::draw.pairwise.venn,
+                VennDiagram::draw.triple.venn, VennDiagram::draw.quad.venn,
+                VennDiagram::draw.quintuple.venn)
     plot_func = DICT[[x]]
-    plot_func_name = names(DICT)[[x]]
-
     for (l in 1:length(sets)) {
         for (i in combn(1:length(sets), l, simplify = F)) {
             s = sets[i]
@@ -542,18 +530,69 @@ yplot_venns = function(...
         }
     }
     argv$cross.area = argv$n12
-    argv = argv %>% ypush(list(category = sets %>% names
-                               , fill = c("dodgerblue",
-                                          "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
-                               cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE
-    )%>%c(draw.args))
-    make.custom(6,6)
-    x = do.call(plot_func,args = argv)
 
-    if (.ret == TRUE){
-        return(list(plot_func=plot_func,args=argv,func_name=plot_func_name))
-    }
+    argv = argv %>% ypush(list(category = sets %>% names, fill=fill[1:length(sets)],
+                               cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE,...))
+    make.custom(6, 6)
+    x = do.call(plot_func, args = argv)
+    list(func = plot_func, args = argv)
 }
+# yplot_venns = function(...
+#                        ,.title=NULL
+#                        ,draw.args=list(cat.dist = 0.05)
+#                        ,.ret = TRUE
+#                        ){
+#     # if parameters is not named, get the sym name of each parameter
+#     sets = list(...)
+#     if (is.null(names(sets))) {
+#         sets_syms <- match.call(expand.dots = FALSE)$...
+#         names(sets) <- paste0("arg", seq_along(sets_syms))
+#         names(sets) <- sapply(sets_syms, deparse)
+#     }
+#     # fi
+#
+#     x = length(sets)
+#     stopifnot(x <= 5&& x >=1)
+#
+#     argv = list()
+#     DICT = list(  draw.single.venn = VennDiagram::draw.single.venn
+#                   , draw.pairwise.venn = VennDiagram::draw.pairwise.venn
+#                   , draw.triple.venn = VennDiagram::draw.triple.venn
+#                   , draw.quad.venn = VennDiagram::draw.quad.venn
+#                   , draw.quintuple.venn = VennDiagram::draw.quintuple.venn)
+#
+#     plot_func = DICT[[x]]
+#     plot_func_name = names(DICT)[[x]]
+#
+#     for (l in 1:length(sets)) {
+#         for (i in combn(1:length(sets), l, simplify = F)) {
+#             s = sets[i]
+#             if (l > 1) {
+#                 r = Reduce(intersect, s) %>% length
+#                 argv[[str_flatten(c("n", i))]] = r
+#             }
+#             else {
+#                 r = length(s[[1]])
+#                 argv[[str_flatten(c("area", i))]] = r
+#             }
+#         }
+#     }
+#     argv$cross.area = argv$n12
+#     argv = argv %>% ypush(list(category = sets %>% names
+#                                , fill = c("dodgerblue",
+#                                           "goldenrod1", "darkorange1", "seagreen3", "orchid3")[1:length(sets)],
+#                                cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE
+#     )%>%c(draw.args))
+#     make.custom(6,6)
+#
+#     if (.ret == TRUE){
+#         return(structure(list(plot_func=plot_func,args=argv,func_name=plot_func_name),class=c('VennDiagram.proto','list')))
+#     }else{
+#         do.call(plot_func,args = argv)
+#     }
+# }
+
+
 
 
 #' Title
@@ -605,11 +644,20 @@ yplot_venns_bydf = function (df,id_col, group_col='Clin_classification', .ret=FA
         summarize(values = list(!!sym_id_col)) %>%
         ungroup() %>%
         {setNames(.$values, .[[group_col]])} %>% c(list(draw.args = list(...)))
+    my_list$.ret = .ret
+    yplot_venns %>% do.call(my_list)
+}
 
-    res = yplot_venns %>% do.call(my_list)
-    if (.ret == TRUE){
-        return(res)
-    }
+#' Title
+#'
+#' @param x
+#'
+#' @return
+#' @export
+#'
+#' @examples
+print.VennDiagram.proto = function(x){
+    r = do.call(what = x$plot_func, args = x$args)
 }
 
 # ------------- PLOT Enrichment ---------------------

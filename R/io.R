@@ -319,7 +319,11 @@ ysave = function (fc = NULL,
             }else{
                 title_line = NULL
             }
-
+            if (is.vector(fc[[i]])){
+                print(paste('convert [',sheetname,'] ->','data.frame'))
+                fc[[i]] = data.frame(`X1`=fc[[i]])
+                tt = 'data.frame'
+            }
             if (tt %>% intersect(c('data.table','tibble', 'data.frame', 'matrix')) %>% length > 0) {
                 sheet  = as.data.frame(fc[[i]])
                 rowNames = yhas_rownames(sheet)
@@ -376,6 +380,16 @@ ysave = function (fc = NULL,
         tryCatch(expr = {
             grDevices::cairo_pdf(fpath, width = WIDTH, height = HEIGHT)
             eval(fc, envir = .GlobalEnv)
+        }, finally = {
+            dev.off()
+        })
+    }else if('VennDiagram.proto' %>% intersect(t) %>% length > 0){
+        fextname = 'pdf'
+        fpath = yfile_path(outputdir, paste0(name , '.', fextname))
+
+        tryCatch(expr = {
+            grDevices::cairo_pdf(fpath, width = WIDTH, height = HEIGHT)
+            r = do.call(what = fc$plot_func, args = fc$args)
         }, finally = {
             dev.off()
         })
@@ -1170,7 +1184,9 @@ yslice = function(iterable, seqs=NULL, .style_negative_index='py'){
 }
 
 
+.ydumpto.VennDiagram.proto = function(){
 
+}
 
 
 
