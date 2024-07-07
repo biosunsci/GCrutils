@@ -6,7 +6,10 @@
 #'   colData will be draw at the top annotation of Heatmap, each column a line
 #' @param annotation_colors define the colors used for draw top annotation, representing colData
 #' @param scale default 'auto', use [yscale_rows()] to standardize each rows
-#' @param by_group if colData provided
+#' @param sel_id_col if colData do not has rownames, use this column as rownames and remove sel_id_col column in colData
+#' @param by_group if colData provided, TRUE will use the first column in colData as 
+#'        group columnn(sel_id_col does not take into account), if character, search by_group as column name in colData 
+#'        and use this column as group column, set to NULL or FALSE to avoid group across columns
 #' @param params_top_annotation plotting params to draw top annotation
 #' @param cluster_rows pass to ComplexHeatmap::Heatmap()
 #' @param cluster_columns pass to ComplexHeatmap::Heatmap()
@@ -40,8 +43,9 @@ yplot_heatmap = function(
         ,annotation_colors = NULL
         ,scale="auto"
         ,by_group = TRUE
-        ,params_top_annotation = NULL
-
+        ,params_top_annotation = NULL    
+        ,sel_id_col = 'Custom_Label'
+        
         ,cluster_rows = TRUE
         ,cluster_columns = TRUE
         ,clustering_method_columns = 'ward.D2'
@@ -79,12 +83,10 @@ yplot_heatmap = function(
         cn = colnames(colData)
 
         if (!yhas_rownames(colData)){
-            can = c('Custom_Label','Tumor_Sample_Barcode','tsb','a','ap')
-            x = intersect(can,cn)
-            if (length(x)>0) {
-                sel = x[1]
-            } else stop('One of `',str_flatten_comma(can),'` must in colnames(colData)')
-            colData %<>% dplyr::column_to_rownames(sel)
+            if (sel_id_col %in% cn){
+                sel = sel_id_col
+            } else stop('sel_id_col = ',sel_id_col,' must in colnames(colData)')
+            colData %<>% tibble::column_to_rownames(sel)
         }
 
         colData %<>% mutate(across(!where(is.factor),factor))
@@ -163,12 +165,22 @@ yplot_heatmap = function(
                 stop(e)
             }
             )
-            if (length(x)<=3){
+            if (length(x)==2){
                 if (x[[1]] * x[[2]] < 0){
                     x = c(x[[1]],0,x[[2]])
+                    color = circlize::colorRamp2(breaks = x, colors =  c("blue", "white", "red")[1:length(x)], space = 'RGB')
+                }else if (x[[1]] * x[[2]] == 0){
+                    if (x[[1]] < x[[2]] && x[[1]]==0) color = circlize::colorRamp2(breaks = x, colors = c("white", "red")[1:length(x)], space = 'RGB')
+                    else if(x[[1]] < x[[2]] && x[[2]]==0) color = circlize::colorRamp2(breaks = x, colors = c("blue", "white")[1:length(x)], space = 'RGB') 
+                    else if(x[[1]] > x[[2]] && x[[1]]==0) color = circlize::colorRamp2(breaks = x, colors = c("white", "blue")[1:length(x)], space = 'RGB') 
+                    else if(x[[1]] > x[[2]] && x[[2]]==0) color = circlize::colorRamp2(breaks = x, colors = c("red", "white")[1:length(x)], space = 'RGB') 
+                    else if(x[[1]]==x[[2]]) stop(paste("color prompt string err, boundaries can't be equal:",color))
+                    else stop(paste('color prompt string parse err', color))
+                }else{
+                    color = circlize::colorRamp2(breaks = x, colors = c("blue", "red")[1:length(x)], space = 'RGB')
                 }
-                color = circlize::colorRamp2(breaks = x, colors =  c("blue", "white", "red")[1:length(x)], space = 'RGB')
-            }else{
+                
+            }else {
                 color = circlize::colorRamp2(breaks = x, colors = rainbow(length(x)), space = 'RGB')
             }
         }else{
@@ -501,7 +513,7 @@ yplot_pca = function (normd, colData, color_col = NULL, add_label = FALSE, add_p
 #'
 #'
 #' @examples
-yplot_venns = function (sets, fill=NULL, ...)
+yplot_venns = function (sets, fill=NULL, .retfunc=FALSE, ...)
 {
     x = length(sets)
     stopifnot(is.list(sets))
@@ -535,7 +547,8 @@ yplot_venns = function (sets, fill=NULL, ...)
                                cat.cex = 1.2, cex = 1, margin = 0.05, ind = TRUE,...))
     make.custom(6, 6)
     x = do.call(plot_func, args = argv)
-    list(func = plot_func, args = argv)
+    if (.retfunc) return(list(func = plot_func, args = argv))
+
 }
 # yplot_venns = function(...
 #                        ,.title=NULL

@@ -6,7 +6,9 @@ Author: person('Ying','Sun',,email='bio_sun@foxmail.com',role=c('aut','cre'),com
 Maintainer: 'Ying Sun' <bio_sun@foxmail.com>
 Description: Convenience functions to make WES/RNAseq data analysis easier
   Help you to do maftools analysis and plots
-  plot heatmap ggplot figs survivalPlots etc
+  plot heatmap ggplot figs survivalPlots etc 
+  potential bug
+  RaggedExperiment, MultiAssayExperiment is need, but I don't know where
 URL: https://github.com/biosunsci/GCrutils
 BugReports: https://github.com/biosunsci/GCrutils/issues 
 License: MIT license
@@ -53,10 +55,8 @@ Suggests:
     IRanges,
     knitr,
     mclust,
-    MultiAssayExperiment,
     NMF,
     R.utils,
-    RaggedExperiment,
     rmarkdown,
     S4Vectors,
     pheatmap,

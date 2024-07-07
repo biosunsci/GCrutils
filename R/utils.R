@@ -1,3 +1,47 @@
+#' get one subtree of a hierarchial cluster dendrogram
+#'
+#' @param hm object class in c("ComplexHeatmap::Heatmap", "dendrogram"), Heatmap obj must have
+#'   dendrogram to extract
+#' @param indices the hierarchy index
+#' @param axis if Heatmap obj, use axis to set which direction's dendrogram to extract,
+#'   "row",'column',1,2, 1 == 'row', 2=='column'
+#' @param attr final operation, to get the corresponding label if "label", if NULL of FALSE, get the
+#'   dendrogram object
+#' @param .flatten
+#'
+#' @return
+#' @export
+#'
+#' @examples
+yget_heatmap_dend_leaves = function(hm, indices, axis = 1, attr = 'label', .flatten=TRUE){
+  if ('Heatmap' %in% class(hm)){
+    if (axis==1 || axis=='row'){
+      d = ComplexHeatmap::row_dend(hm)
+    }else if(axis==2 || axis=='column'){
+      d = ComplexHeatmap::column_dend(hm)
+    }else{
+      stop("axis must be in c(1,2) or c('row','column')")
+    }
+  }else if('dendrogram' %in% class(hm)){
+    d = hm
+  }else{
+    stop("hm only object of class 'Heatmap' or 'dendrogram' is supported ")
+  }
+  if (!is.list(indices)) indices = list(indices)
+  # 按l提供的index从树根顺次提取子树叶, l is like c(2,1,1,2,...), indices is the list of l(s)
+  res = indices %>% 
+    lapply(FUN = function(l){
+      r = purrr::reduce(.x = l, .f = function(dend,i){
+        dendextend::as.dendlist(dend) %>% .[[i]]
+      },.init=d) 
+      if (is.null(attr) || attr==FALSE) return(r)
+      else return(r %>% dendextend::get_leaves_attr(attr))
+    })
+  if (.flatten) return(purrr::reduce(res, c))
+  else return(res)
+  
+}
+
 #' same as Reduce
 #'
 #' @description same as Reduce except for x,f position exchanged for compilable with pipe op %>%
